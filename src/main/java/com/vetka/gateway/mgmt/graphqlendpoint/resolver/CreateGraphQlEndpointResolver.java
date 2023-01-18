@@ -1,9 +1,14 @@
 package com.vetka.gateway.mgmt.graphqlendpoint.resolver;
 
+import com.vetka.gateway.mgmt.endpoint.model.EndpointErrorDuplicatingName;
+import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationErrors;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationInput;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationPayload;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationResponse;
+import com.vetka.gateway.mgmt.service.FederationService;
 import com.vetka.gateway.persistence.api.PersistenceServiceFacade;
+import com.vetka.gateway.persistence.api.exception.endpoint.DuplicatingEndpointNameException;
+import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +23,7 @@ import reactor.core.publisher.Mono;
 public class CreateGraphQlEndpointResolver {
 
     private final PersistenceServiceFacade persistenceServiceFacade;
+    private final FederationService federationService;
 
     @MutationMapping
     public Mono<GraphQlEndpointCreationPayload> createGraphQlEndpoint(
@@ -28,6 +34,16 @@ public class CreateGraphQlEndpointResolver {
         return persistenceServiceFacade.serviceFacade()
                 .graphQlEndpointService()
                 .create(input)
-                .map(e -> GraphQlEndpointCreationResponse.builder().graphQlEndpoint(e).build());
+                .flatMap(federationService::reconfigure)
+                .map(e -> (GraphQlEndpointCreationPayload) GraphQlEndpointCreationResponse.builder()
+                        .graphQlEndpoint(e)
+                        .build())
+                .onErrorResume(DuplicatingEndpointNameException.class, ex -> Mono.just(
+                        GraphQlEndpointCreationErrors.builder()
+                                .errors(List.of(EndpointErrorDuplicatingName.builder()
+                                        .message("There is already an endpoint with the given name")
+                                        .name(ex.getName())
+                                        .build()))
+                                .build()));
     }
 }

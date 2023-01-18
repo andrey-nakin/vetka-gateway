@@ -1,0 +1,21 @@
+package com.vetka.gateway.mgmt.service;
+
+import com.vetka.gateway.persistence.api.PersistenceServiceFacade;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class FederationService {
+
+    private final PersistenceServiceFacade persistenceServiceFacade;
+
+    public <T> Mono<T> reconfigure(final T context) {
+        log.info("reconfigure");
+        // TODO
+        return Mono.just(context);
+    }
+}

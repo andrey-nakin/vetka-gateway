@@ -9,7 +9,6 @@ import org.apache.commons.lang3.StringUtils;
 @Builder
 public class GraphQlEndpointCreationInput {
 
-    @NonNull
     private final String name;
     @NonNull
     private final String address;

@@ -2,6 +2,7 @@ package com.vetka.gateway.persistence.mongo.service.graphqlendpoint;
 
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationInput;
+import com.vetka.gateway.persistence.api.exception.endpoint.DuplicatingEndpointNameException;
 import com.vetka.gateway.persistence.api.exception.endpoint.EndpointNotFoundException;
 import com.vetka.gateway.persistence.api.graphqlendpoint.IGraphQlEndpointService;
 import com.vetka.gateway.persistence.mongo.mapping.graphqlendpoint.GraphQlEndpointSerializer;
@@ -30,7 +31,8 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
     public Mono<GraphQlEndpoint> create(@NonNull final GraphQlEndpointCreationInput input) {
         log.info("create input={}", input);
 
-        return repository.insert(serializer.toDocument(input)).map(serializer::toModel);
+        return checkName(input.getName()).flatMap(
+                unused -> repository.insert(serializer.toDocument(input)).map(serializer::toModel));
     }
 
     @Override
@@ -40,5 +42,15 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new EndpointNotFoundException(id)))
                 .flatMap(e -> repository.deleteById(id));
+    }
+
+    private Mono<String> checkName(final String name) {
+        return name == null ? Mono.empty() : repository.findAllByName(name).collectList().flatMap(l -> {
+            if (l.isEmpty()) {
+                return Mono.just(name);
+            } else {
+                return Mono.error(new DuplicatingEndpointNameException(name));
+            }
+        });
     }
 }
