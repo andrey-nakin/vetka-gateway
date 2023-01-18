@@ -10,4 +10,6 @@ public interface IGraphQlEndpointService {
     Flux<GraphQlEndpoint> findAll();
 
     Mono<GraphQlEndpoint> create(GraphQlEndpointCreationInput input);
+
+    Mono<Void> delete(String id);
 }

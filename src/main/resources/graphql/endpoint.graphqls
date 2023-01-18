@@ -14,7 +14,7 @@ extend type Mutation {
 union EndpointDeletionPayload = EndpointDeletionResponse | EndpointDeletionErrors
 
 type EndpointDeletionResponse {
-  endpoint: IEndpoint!
+  id: ID!
 }
 
 type EndpointDeletionErrors {

@@ -9,5 +9,5 @@ import lombok.NonNull;
 public class EndpointDeletionResponse implements EndpointDeletionPayload {
 
     @NonNull
-    private final IEndpoint endpoint;
+    private final String id;
 }

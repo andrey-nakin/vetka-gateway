@@ -7,12 +7,14 @@ import com.vetka.gateway.persistence.mongo.mapping.graphqlendpoint.GraphQlEndpoi
 import com.vetka.gateway.persistence.mongo.repository.graphqlendpoint.GraphQlEndpointRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
 
     private final GraphQlEndpointSerializer serializer;
@@ -26,5 +28,11 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
     @Override
     public Mono<GraphQlEndpoint> create(@NonNull final GraphQlEndpointCreationInput input) {
         return repository.insert(serializer.toDocument(input)).map(serializer::toModel);
+    }
+
+    @Override
+    public Mono<Void> delete(@NonNull final String id) {
+        log.info("delete id={}", id);
+        return repository.deleteById(id);
     }
 }
