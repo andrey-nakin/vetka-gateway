@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+mongo-volume
+docker-compose.yaml
+start.sh
+init-mongo.js
