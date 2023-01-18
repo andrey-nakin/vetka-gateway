@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class MongoPersistenceServiceFacade implements IPersistenceServiceFacade {
 
+    public static final String NAME = "mongo";
+
     private final MongoGraphQlEndpointService mongoGraphQlEndpointService;
 
     public IGraphQlEndpointService graphQlEndpointService() {

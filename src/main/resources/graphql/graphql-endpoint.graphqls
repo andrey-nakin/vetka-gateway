@@ -34,7 +34,8 @@ type GraphQlEndpointUpdateErrors {
 
 union GraphQlEndpointUpdateError = GraphQlEndpointErrorBadSchema | EndpointErrorUnknownId | EndpointErrorDuplicatingName
 
-type GraphQlEndpointErrorBadSchema {
+type GraphQlEndpointErrorBadSchema implements IError {
+  message: String!
   schema: String!
 }
 
