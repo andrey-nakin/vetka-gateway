@@ -1,0 +1,14 @@
+package com.vetka.gateway.mgmt.endpoint.model;
+
+import java.util.List;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
+
+@Getter
+@Builder
+public class EndpointDeletionErrors implements EndpointDeletionPayload {
+
+    @NonNull
+    private final List<EndpointDeletionError> errors;
+}

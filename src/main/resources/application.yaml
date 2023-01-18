@@ -1,0 +1,16 @@
+spring:
+  graphql:
+    graphiql:
+      enabled: true
+    schema:
+      introspection:
+        enabled: true
+      printer:
+        enabled: true
+
+vetka:
+  gateway:
+    persistence:
+      engine: mongo
+      mongo:
+        database-name: "vetka_gateway"

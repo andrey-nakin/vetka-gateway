@@ -1,0 +1,52 @@
+extend type Mutation {
+  createGraphQlEndpoint(input: GraphQlEndpointCreationInput!): GraphQlEndpointCreationPayload!
+  updateGraphQlEndpoint(input: GraphQlEndpointUpdateInput!): GraphQlEndpointUpdatePayload!
+}
+
+type GraphQlEndpoint implements IEndpoint {
+  id: ID!
+  name: String
+  address: String!
+  schema: String!
+}
+
+union GraphQlEndpointCreationPayload = GraphQlEndpointCreationResponse | GraphQlEndpointCreationErrors
+
+type GraphQlEndpointCreationResponse {
+  graphQlEndpoint: GraphQlEndpoint!
+}
+
+type GraphQlEndpointCreationErrors {
+  errors: [GraphQlEndpointCreationError!]!
+}
+
+union GraphQlEndpointCreationError = GraphQlEndpointErrorBadSchema | EndpointErrorDuplicatingName
+
+union GraphQlEndpointUpdatePayload = GraphQlEndpointUpdateResponse | GraphQlEndpointUpdateErrors
+
+type GraphQlEndpointUpdateResponse {
+  graphQlEndpoint: GraphQlEndpoint!
+}
+
+type GraphQlEndpointUpdateErrors {
+  errors: [GraphQlEndpointUpdateError!]!
+}
+
+union GraphQlEndpointUpdateError = GraphQlEndpointErrorBadSchema | EndpointErrorUnknownId | EndpointErrorDuplicatingName
+
+type GraphQlEndpointErrorBadSchema {
+  schema: String!
+}
+
+input GraphQlEndpointCreationInput {
+  name: String
+  address: String!
+  schema: String!
+}
+
+input GraphQlEndpointUpdateInput {
+  id: ID!
+  name: String
+  address: String
+  schema: String
+}

@@ -1,0 +1,34 @@
+interface IEndpoint {
+  id: ID!
+  name: String
+}
+
+extend type Query {
+  endpoints: [IEndpoint!]!
+}
+
+extend type Mutation {
+  deleteEndpoint(id: ID!): EndpointDeletionPayload!
+}
+
+union EndpointDeletionPayload = EndpointDeletionResponse | EndpointDeletionErrors
+
+type EndpointDeletionResponse {
+  endpoint: IEndpoint!
+}
+
+type EndpointDeletionErrors {
+  errors: [EndpointDeletionError!]!
+}
+
+union EndpointDeletionError = EndpointErrorUnknownId
+
+type EndpointErrorUnknownId implements IError {
+  message: String!
+  id: ID!
+}
+
+type EndpointErrorDuplicatingName implements IError {
+  message: String!
+  name: String!
+}
