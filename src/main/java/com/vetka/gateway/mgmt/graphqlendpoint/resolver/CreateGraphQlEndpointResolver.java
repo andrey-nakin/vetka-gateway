@@ -5,9 +5,12 @@ import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationError
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationInput;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationPayload;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationResponse;
+import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointErrorBadSchema;
 import com.vetka.gateway.mgmt.service.FederationService;
 import com.vetka.gateway.persistence.api.PersistenceServiceFacade;
 import com.vetka.gateway.persistence.api.exception.endpoint.DuplicatingEndpointNameException;
+import com.vetka.gateway.schema.exception.BadSchemaException;
+import com.vetka.gateway.schema.service.SchemaValidationService;
 import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,7 @@ public class CreateGraphQlEndpointResolver {
 
     private final PersistenceServiceFacade persistenceServiceFacade;
     private final FederationService federationService;
+    private final SchemaValidationService schemaValidationService;
 
     @MutationMapping
     public Mono<GraphQlEndpointCreationPayload> createGraphQlEndpoint(
@@ -31,13 +35,18 @@ public class CreateGraphQlEndpointResolver {
 
         log.info("createGraphQlEndpoint input={}", input);
 
-        return persistenceServiceFacade.serviceFacade()
-                .graphQlEndpointService()
-                .create(input)
+        return schemaValidationService.validate(input.getSchema())
+                .flatMap(unused -> persistenceServiceFacade.serviceFacade().graphQlEndpointService().create(input))
                 .flatMap(federationService::reconfigure)
                 .map(e -> (GraphQlEndpointCreationPayload) GraphQlEndpointCreationResponse.builder()
                         .graphQlEndpoint(e)
                         .build())
+                .onErrorResume(BadSchemaException.class, ex -> Mono.just(GraphQlEndpointCreationErrors.builder()
+                        .errors(List.of(GraphQlEndpointErrorBadSchema.builder()
+                                .message("Schema is incorrect")
+                                .schema(ex.getSchema())
+                                .build()))
+                        .build()))
                 .onErrorResume(DuplicatingEndpointNameException.class, ex -> Mono.just(
                         GraphQlEndpointCreationErrors.builder()
                                 .errors(List.of(EndpointErrorDuplicatingName.builder()
