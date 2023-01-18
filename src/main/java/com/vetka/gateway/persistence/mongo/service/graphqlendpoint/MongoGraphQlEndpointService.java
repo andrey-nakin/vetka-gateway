@@ -2,6 +2,7 @@ package com.vetka.gateway.persistence.mongo.service.graphqlendpoint;
 
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationInput;
+import com.vetka.gateway.persistence.api.exception.endpoint.EndpointNotFoundException;
 import com.vetka.gateway.persistence.api.graphqlendpoint.IGraphQlEndpointService;
 import com.vetka.gateway.persistence.mongo.mapping.graphqlendpoint.GraphQlEndpointSerializer;
 import com.vetka.gateway.persistence.mongo.repository.graphqlendpoint.GraphQlEndpointRepository;
@@ -27,12 +28,17 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
 
     @Override
     public Mono<GraphQlEndpoint> create(@NonNull final GraphQlEndpointCreationInput input) {
+        log.info("create input={}", input);
+
         return repository.insert(serializer.toDocument(input)).map(serializer::toModel);
     }
 
     @Override
     public Mono<Void> delete(@NonNull final String id) {
         log.info("delete id={}", id);
-        return repository.deleteById(id);
+
+        return repository.findById(id)
+                .switchIfEmpty(Mono.error(new EndpointNotFoundException(id)))
+                .flatMap(e -> repository.deleteById(id));
     }
 }
