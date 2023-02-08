@@ -1,4 +1,4 @@
-package com.vetka.gateway.endpoint.config;
+package com.vetka.gateway.endpoint.properties;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -6,10 +6,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties("vetka.gateway")
+@ConfigurationProperties("vetka.gateway.endpoint")
 @Getter
 @Setter
-public class GatewayProperties {
+public class EndpointProperties {
 
     private String path;
 }

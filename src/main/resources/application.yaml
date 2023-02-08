@@ -10,7 +10,8 @@ spring:
 
 vetka:
   gateway:
-    path: "/"
+    endpoint:
+      path: "/"
     persistence:
       engine: mongo
       mongo:
