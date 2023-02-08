@@ -1,6 +1,6 @@
 interface IEndpoint {
   id: ID!
-  name: String
+  name: String!
 }
 
 extend type Query {
@@ -29,6 +29,11 @@ type EndpointErrorUnknownId implements IError {
 }
 
 type EndpointErrorDuplicatingName implements IError {
+  message: String!
+  name: String!
+}
+
+type EndpointErrorEmptyName implements IError {
   message: String!
   name: String!
 }

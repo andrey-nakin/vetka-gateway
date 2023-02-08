@@ -1,13 +1,15 @@
 package com.vetka.gateway.mgmt.graphqlendpoint.resolver;
 
 import com.vetka.gateway.mgmt.endpoint.model.EndpointErrorDuplicatingName;
+import com.vetka.gateway.mgmt.endpoint.model.EndpointErrorEmptyName;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationErrors;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationInput;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationPayload;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationResponse;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointErrorBadSchema;
 import com.vetka.gateway.persistence.api.IPersistenceServiceFacade;
-import com.vetka.gateway.persistence.api.exception.endpoint.DuplicatingEndpointNameException;
+import com.vetka.gateway.persistence.api.exception.endpoint.EndpointDuplicatingNameException;
+import com.vetka.gateway.persistence.api.exception.endpoint.EndpointEmptyNameException;
 import com.vetka.gateway.schema.exception.BadSchemaException;
 import com.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
 import com.vetka.gateway.schema.service.SchemaValidationService;
@@ -15,6 +17,7 @@ import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.stereotype.Controller;
@@ -36,6 +39,7 @@ public class CreateGraphQlEndpointResolver {
         log.info("createGraphQlEndpoint input={}", input);
 
         return schemaValidationService.validate(input.getSchema())
+                .doOnSuccess(unused -> this.validate(input))
                 .flatMap(unused -> persistenceServiceFacade.graphQlEndpointService().create(input))
                 .doOnSuccess(unused -> graphQlSchemaRegistryService.reloadSchemas())
                 .map(e -> (GraphQlEndpointCreationPayload) GraphQlEndpointCreationResponse.builder()
@@ -47,12 +51,21 @@ public class CreateGraphQlEndpointResolver {
                                 .schema(ex.getSchema())
                                 .build()))
                         .build()))
-                .onErrorResume(DuplicatingEndpointNameException.class, ex -> Mono.just(
+                .onErrorResume(EndpointEmptyNameException.class, ex -> Mono.just(GraphQlEndpointCreationErrors.builder()
+                        .errors(List.of(EndpointErrorEmptyName.builder().message("Empty endpoint name").build()))
+                        .build()))
+                .onErrorResume(EndpointDuplicatingNameException.class, ex -> Mono.just(
                         GraphQlEndpointCreationErrors.builder()
                                 .errors(List.of(EndpointErrorDuplicatingName.builder()
                                         .message("There is already an endpoint with the given name")
                                         .name(ex.getName())
                                         .build()))
                                 .build()));
+    }
+
+    private void validate(@NonNull final GraphQlEndpointCreationInput input) {
+        if (StringUtils.isBlank(input.getName())) {
+            throw new EndpointEmptyNameException();
+        }
     }
 }

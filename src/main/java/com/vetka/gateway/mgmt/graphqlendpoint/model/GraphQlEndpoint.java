@@ -12,6 +12,7 @@ public class GraphQlEndpoint implements IEndpoint {
 
     @NonNull
     private final String id;
+    @NonNull
     private final String name;
     @NonNull
     private final String address;

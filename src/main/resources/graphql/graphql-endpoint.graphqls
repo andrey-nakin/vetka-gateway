@@ -5,7 +5,7 @@ extend type Mutation {
 
 type GraphQlEndpoint implements IEndpoint {
   id: ID!
-  name: String
+  name: String!
   address: String!
   schema: String!
 }
@@ -20,7 +20,7 @@ type GraphQlEndpointCreationErrors {
   errors: [GraphQlEndpointCreationError!]!
 }
 
-union GraphQlEndpointCreationError = GraphQlEndpointErrorBadSchema | EndpointErrorDuplicatingName
+union GraphQlEndpointCreationError = GraphQlEndpointErrorBadSchema | EndpointErrorDuplicatingName | EndpointErrorEmptyName
 
 union GraphQlEndpointUpdatePayload = GraphQlEndpointUpdateResponse | GraphQlEndpointUpdateErrors
 
@@ -32,7 +32,7 @@ type GraphQlEndpointUpdateErrors {
   errors: [GraphQlEndpointUpdateError!]!
 }
 
-union GraphQlEndpointUpdateError = GraphQlEndpointErrorBadSchema | EndpointErrorUnknownId | EndpointErrorDuplicatingName
+union GraphQlEndpointUpdateError = GraphQlEndpointErrorBadSchema | EndpointErrorUnknownId | EndpointErrorDuplicatingName | EndpointErrorEmptyName
 
 type GraphQlEndpointErrorBadSchema implements IError {
   message: String!
@@ -40,7 +40,7 @@ type GraphQlEndpointErrorBadSchema implements IError {
 }
 
 input GraphQlEndpointCreationInput {
-  name: String
+  name: String!
   address: String!
   schema: String!
 }
