@@ -2,7 +2,6 @@ package com.vetka.gateway.persistence.api;
 
 import com.vetka.gateway.persistence.api.graphqlendpoint.IGraphQlEndpointService;
 import com.vetka.gateway.persistence.mongo.service.graphqlendpoint.MongoGraphQlEndpointService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +17,6 @@ public class PersistenceServiceFacadeConfiguration {
         return new MongoPersistenceServiceFacade(mongoGraphQlEndpointService);
     }
 
-    @RequiredArgsConstructor
     private record MongoPersistenceServiceFacade(
             MongoGraphQlEndpointService mongoGraphQlEndpointService) implements IPersistenceServiceFacade {
 
