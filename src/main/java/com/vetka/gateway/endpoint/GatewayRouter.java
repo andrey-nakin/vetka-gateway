@@ -14,9 +14,9 @@ public class GatewayRouter {
 
     @Bean
     public RouterFunction<ServerResponse> route(final GatewayProperties gatewayProperties,
-            final GatewayEndpoint gatewayEndpoint) {
+            final GatewayHttpHandler gatewayHttpHandler) {
 
         return RouterFunctions.route(RequestPredicates.POST(gatewayProperties.getPath())
-                .and(RequestPredicates.accept(MediaType.APPLICATION_JSON)), gatewayEndpoint::handleRequest);
+                .and(RequestPredicates.accept(MediaType.APPLICATION_JSON)), gatewayHttpHandler::handleRequest);
     }
 }

@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class GatewayEndpoint {
+public class GatewayHttpHandler {
 
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_PARAMETERIZED_TYPE_REF =
             new ParameterizedTypeReference<>() {};
