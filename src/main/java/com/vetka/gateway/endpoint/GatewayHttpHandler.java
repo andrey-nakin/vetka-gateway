@@ -1,6 +1,5 @@
 package com.vetka.gateway.endpoint;
 
-import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,40 +16,30 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class GatewayHttpHandler {
 
-    private static final ParameterizedTypeReference<Map<String, Object>> MAP_PARAMETERIZED_TYPE_REF =
+    private static final ParameterizedTypeReference<Map<String, Object>> TYPE_REF =
             new ParameterizedTypeReference<>() {};
-    private static final List<MediaType> SUPPORTED_MEDIA_TYPES = List.of(MediaType.APPLICATION_JSON);
 
     private final GatewayWebGraphQlHandler gatewayWebGraphQlHandler;
 
     public Mono<ServerResponse> handleRequest(final ServerRequest serverRequest) {
-        return serverRequest.bodyToMono(MAP_PARAMETERIZED_TYPE_REF).flatMap(body -> {
+        return serverRequest.bodyToMono(TYPE_REF).flatMap(body -> {
             final WebGraphQlRequest graphQlRequest =
                     new WebGraphQlRequest(serverRequest.uri(), serverRequest.headers().asHttpHeaders(), body,
                             serverRequest.exchange().getRequest().getId(),
                             serverRequest.exchange().getLocaleContext().getLocale());
             if (log.isDebugEnabled()) {
-                log.debug("Executing: {}", graphQlRequest);
+                log.debug("handle {}", graphQlRequest);
             }
 
             return gatewayWebGraphQlHandler.handleRequest(graphQlRequest);
         }).flatMap(response -> {
             if (log.isDebugEnabled()) {
-                log.debug("Execution complete");
+                log.debug("complete");
             }
             final ServerResponse.BodyBuilder builder = ServerResponse.ok();
             builder.headers(headers -> headers.putAll(response.getResponseHeaders()));
-            builder.contentType(selectResponseMediaType(serverRequest));
+            builder.contentType(MediaType.APPLICATION_JSON);
             return builder.bodyValue(response.toMap());
         });
-    }
-
-    private static MediaType selectResponseMediaType(ServerRequest serverRequest) {
-        for (MediaType accepted : serverRequest.headers().accept()) {
-            if (SUPPORTED_MEDIA_TYPES.contains(accepted)) {
-                return accepted;
-            }
-        }
-        return MediaType.APPLICATION_JSON;
     }
 }
