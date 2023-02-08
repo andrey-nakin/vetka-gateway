@@ -4,6 +4,7 @@ import com.vetka.gateway.mgmt.endpoint.model.IEndpoint;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
 
 @Getter
 @Builder
@@ -16,4 +17,10 @@ public class GraphQlEndpoint implements IEndpoint {
     private final String address;
     @NonNull
     private final String schema;
+
+    @Override
+    public String toString() {
+        return "GraphQlEndpoint{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", address='" + address + '\'' + ", schema='" + StringUtils.truncate(
+                schema, 50) + '\'' + '}';
+    }
 }
