@@ -5,7 +5,7 @@ import com.vetka.gateway.mgmt.endpoint.model.EndpointDeletionPayload;
 import com.vetka.gateway.mgmt.endpoint.model.EndpointDeletionResponse;
 import com.vetka.gateway.mgmt.endpoint.model.EndpointErrorUnknownId;
 import com.vetka.gateway.mgmt.service.FederationService;
-import com.vetka.gateway.persistence.api.PersistenceServiceFacade;
+import com.vetka.gateway.persistence.api.IPersistenceServiceFacade;
 import com.vetka.gateway.persistence.api.exception.endpoint.EndpointNotFoundException;
 import java.util.List;
 import lombok.NonNull;
@@ -21,15 +21,14 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class DeleteEndpointResolver {
 
-    private final PersistenceServiceFacade persistenceServiceFacade;
+    private final IPersistenceServiceFacade persistenceServiceFacade;
     private final FederationService federationService;
 
     @MutationMapping
     public Mono<EndpointDeletionPayload> deleteEndpoint(@NonNull @Argument final String id) {
         log.info("deleteEndpoint id={}", id);
 
-        return persistenceServiceFacade.serviceFacade()
-                .graphQlEndpointService()
+        return persistenceServiceFacade.graphQlEndpointService()
                 .delete(id)
                 .flatMap(federationService::reconfigure)
                 .thenReturn((EndpointDeletionPayload) EndpointDeletionResponse.builder().id(id).build())

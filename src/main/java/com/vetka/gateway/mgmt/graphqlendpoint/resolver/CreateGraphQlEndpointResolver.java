@@ -7,7 +7,7 @@ import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationPaylo
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationResponse;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointErrorBadSchema;
 import com.vetka.gateway.mgmt.service.FederationService;
-import com.vetka.gateway.persistence.api.PersistenceServiceFacade;
+import com.vetka.gateway.persistence.api.IPersistenceServiceFacade;
 import com.vetka.gateway.persistence.api.exception.endpoint.DuplicatingEndpointNameException;
 import com.vetka.gateway.schema.exception.BadSchemaException;
 import com.vetka.gateway.schema.service.SchemaValidationService;
@@ -25,7 +25,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class CreateGraphQlEndpointResolver {
 
-    private final PersistenceServiceFacade persistenceServiceFacade;
+    private final IPersistenceServiceFacade persistenceServiceFacade;
     private final FederationService federationService;
     private final SchemaValidationService schemaValidationService;
 
@@ -36,7 +36,7 @@ public class CreateGraphQlEndpointResolver {
         log.info("createGraphQlEndpoint input={}", input);
 
         return schemaValidationService.validate(input.getSchema())
-                .flatMap(unused -> persistenceServiceFacade.serviceFacade().graphQlEndpointService().create(input))
+                .flatMap(unused -> persistenceServiceFacade.graphQlEndpointService().create(input))
                 .flatMap(federationService::reconfigure)
                 .map(e -> (GraphQlEndpointCreationPayload) GraphQlEndpointCreationResponse.builder()
                         .graphQlEndpoint(e)
