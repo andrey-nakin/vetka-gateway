@@ -12,6 +12,7 @@ import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.NonNull;
@@ -79,43 +80,36 @@ public class GraphQlSchemaRegistryService {
             final var a = endpoints.get(i);
             for (int j = i + 1; j < endpoints.size(); j++) {
                 final var b = endpoints.get(j);
-                final var queryIntersections = intersection(a.getQueries(), b.getQueries());
-                if (!queryIntersections.isEmpty()) {
-                    sb.append("There are conflicting queries in endpoints ")
-                            .append(a.getGraphQlEndpoint().getName())
-                            .append(" and ")
-                            .append(b.getGraphQlEndpoint().getName())
-                            .append(": ")
-                            .append(queryIntersections);
-                    ok = false;
-                }
 
-                final var mutationIntersections = intersection(a.getMutations(), b.getMutations());
-                if (!mutationIntersections.isEmpty()) {
-                    sb.append("There are conflicting mutations in endpoints ")
-                            .append(a.getGraphQlEndpoint().getName())
-                            .append(" and ")
-                            .append(b.getGraphQlEndpoint().getName())
-                            .append(": ")
-                            .append(mutationIntersections);
-                    ok = false;
-                }
-
-                final var subscriptionIntersections = intersection(a.getSubscriptions(), b.getSubscriptions());
-                if (!subscriptionIntersections.isEmpty()) {
-                    sb.append("There are conflicting subscriptions in endpoints ")
-                            .append(a.getGraphQlEndpoint().getName())
-                            .append(" and ")
-                            .append(b.getGraphQlEndpoint().getName())
-                            .append(": ")
-                            .append(subscriptionIntersections);
-                    ok = false;
-                }
+                ok = ok && checkIntersections(sb, a, b, GraphQlEndpointInfo::getQueries, "queries");
+                ok = ok && checkIntersections(sb, a, b, GraphQlEndpointInfo::getMutations, "mutations");
+                ok = ok && checkIntersections(sb, a, b, GraphQlEndpointInfo::getSubscriptions, "subscriptions");
             }
         }
 
         if (!ok) {
             throw new SchemaConflictException(sb.toString());
+        }
+    }
+
+    private static boolean checkIntersections(@NonNull final StringBuilder sb, @NonNull final GraphQlEndpointInfo a,
+            @NonNull final GraphQlEndpointInfo b, @NonNull final Function<GraphQlEndpointInfo, Set<String>> getter,
+            @NonNull final String typeName) {
+
+        final var intersections = intersection(getter.apply(a), getter.apply(b));
+        if (!intersections.isEmpty()) {
+            sb.append("There are conflicting ")
+                    .append(typeName)
+                    .append(" in endpoints ")
+                    .append(a.getGraphQlEndpoint().getName())
+                    .append(" and ")
+                    .append(b.getGraphQlEndpoint().getName())
+                    .append(": ")
+                    .append(intersections)
+                    .append(".\n");
+            return false;
+        } else {
+            return true;
         }
     }
 
