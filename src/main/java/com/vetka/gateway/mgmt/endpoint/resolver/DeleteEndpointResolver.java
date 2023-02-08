@@ -4,9 +4,9 @@ import com.vetka.gateway.mgmt.endpoint.model.EndpointDeletionErrors;
 import com.vetka.gateway.mgmt.endpoint.model.EndpointDeletionPayload;
 import com.vetka.gateway.mgmt.endpoint.model.EndpointDeletionResponse;
 import com.vetka.gateway.mgmt.endpoint.model.EndpointErrorUnknownId;
-import com.vetka.gateway.mgmt.service.FederationService;
 import com.vetka.gateway.persistence.api.IPersistenceServiceFacade;
 import com.vetka.gateway.persistence.api.exception.endpoint.EndpointNotFoundException;
+import com.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
 import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
 public class DeleteEndpointResolver {
 
     private final IPersistenceServiceFacade persistenceServiceFacade;
-    private final FederationService federationService;
+    private final GraphQlSchemaRegistryService graphQlSchemaRegistryService;
 
     @MutationMapping
     public Mono<EndpointDeletionPayload> deleteEndpoint(@NonNull @Argument final String id) {
@@ -30,7 +30,7 @@ public class DeleteEndpointResolver {
 
         return persistenceServiceFacade.graphQlEndpointService()
                 .delete(id)
-                .flatMap(federationService::reconfigure)
+                .doOnSuccess(unused -> graphQlSchemaRegistryService.reloadSchemas())
                 .thenReturn((EndpointDeletionPayload) EndpointDeletionResponse.builder().id(id).build())
                 .onErrorResume(EndpointNotFoundException.class, ex -> Mono.just(EndpointDeletionErrors.builder()
                         .errors(List.of(EndpointErrorUnknownId.builder()

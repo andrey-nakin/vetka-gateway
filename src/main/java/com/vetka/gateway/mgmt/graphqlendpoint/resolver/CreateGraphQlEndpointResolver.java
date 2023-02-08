@@ -6,10 +6,10 @@ import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationInput
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationPayload;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationResponse;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointErrorBadSchema;
-import com.vetka.gateway.mgmt.service.FederationService;
 import com.vetka.gateway.persistence.api.IPersistenceServiceFacade;
 import com.vetka.gateway.persistence.api.exception.endpoint.DuplicatingEndpointNameException;
 import com.vetka.gateway.schema.exception.BadSchemaException;
+import com.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
 import com.vetka.gateway.schema.service.SchemaValidationService;
 import java.util.List;
 import lombok.NonNull;
@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
 public class CreateGraphQlEndpointResolver {
 
     private final IPersistenceServiceFacade persistenceServiceFacade;
-    private final FederationService federationService;
+    private final GraphQlSchemaRegistryService graphQlSchemaRegistryService;
     private final SchemaValidationService schemaValidationService;
 
     @MutationMapping
@@ -37,7 +37,7 @@ public class CreateGraphQlEndpointResolver {
 
         return schemaValidationService.validate(input.getSchema())
                 .flatMap(unused -> persistenceServiceFacade.graphQlEndpointService().create(input))
-                .flatMap(federationService::reconfigure)
+                .doOnSuccess(unused -> graphQlSchemaRegistryService.reloadSchemas())
                 .map(e -> (GraphQlEndpointCreationPayload) GraphQlEndpointCreationResponse.builder()
                         .graphQlEndpoint(e)
                         .build())
