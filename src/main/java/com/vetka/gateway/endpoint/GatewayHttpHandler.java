@@ -16,6 +16,8 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class GatewayHttpHandler {
 
+    public static final MediaType MEDIA_TYPE = MediaType.APPLICATION_JSON;
+
     private static final ParameterizedTypeReference<Map<String, Object>> TYPE_REF =
             new ParameterizedTypeReference<>() {};
 
@@ -38,7 +40,7 @@ public class GatewayHttpHandler {
             }
             final ServerResponse.BodyBuilder builder = ServerResponse.ok();
             builder.headers(headers -> headers.putAll(response.getResponseHeaders()));
-            builder.contentType(MediaType.APPLICATION_JSON);
+            builder.contentType(MEDIA_TYPE);
             return builder.bodyValue(response.toMap());
         });
     }
