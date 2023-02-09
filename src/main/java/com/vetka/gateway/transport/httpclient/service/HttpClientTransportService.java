@@ -36,23 +36,17 @@ public class HttpClientTransportService implements ITransportService {
             @NonNull final WebGraphQlRequestWrapper webGraphQlRequestWrapper,
             @NonNull final GraphQlEndpointInfo graphQlEndpointInfo) {
 
-        final var graphQlEndpoint = graphQlEndpointInfo.getGraphQlEndpoint();
-        log.debug("proxying request to {}", graphQlEndpoint.getAddress());
-
-        final var client = HttpClient.newBuilder()
-                .version(validateHttpVersion(
-                        ObjectUtils.defaultIfNull(graphQlEndpoint.getHttpVersion(), properties.getHttpVersion())))
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .connectTimeout(Duration.ofSeconds(validateConnectTimeout(
-                        ObjectUtils.defaultIfNull(graphQlEndpoint.getConnectTimeout(),
-                                properties.getConnectTimeout()))))
-                .build();
+        if (log.isDebugEnabled()) {
+            log.debug("proxying request to {}", graphQlEndpointInfo.getGraphQlEndpoint().getAddress());
+        }
 
         try {
+            final var client = httpClient(graphQlEndpointInfo);
             final var request = HttpRequest.newBuilder()
-                    .uri(URI.create(graphQlEndpoint.getAddress()))
+                    .uri(URI.create(graphQlEndpointInfo.getGraphQlEndpoint().getAddress()))
                     .timeout(Duration.ofSeconds(validateReadTimeout(
-                            ObjectUtils.defaultIfNull(graphQlEndpoint.getReadTimeout(), properties.getReadTimeout()))))
+                            ObjectUtils.defaultIfNull(graphQlEndpointInfo.getGraphQlEndpoint().getReadTimeout(),
+                                    properties.getReadTimeout()))))
                     .POST(HttpRequest.BodyPublishers.ofString(objectMapperHelper.getObjectMapper()
                             .writeValueAsString(
                                     webGraphQlRequestWrapper.body())))  //  TODO: inefficient on long requests
@@ -74,6 +68,18 @@ public class HttpClientTransportService implements ITransportService {
         } catch (IOException e) {
             return Mono.error(e);
         }
+    }
+
+    private HttpClient httpClient(final GraphQlEndpointInfo graphQlEndpointInfo) {
+        final var graphQlEndpoint = graphQlEndpointInfo.getGraphQlEndpoint();
+        return graphQlEndpointInfo.getCachedValue("HttpClientTransportService.HttpClient", () -> HttpClient.newBuilder()
+                .version(validateHttpVersion(
+                        ObjectUtils.defaultIfNull(graphQlEndpoint.getHttpVersion(), properties.getHttpVersion())))
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .connectTimeout(Duration.ofSeconds(validateConnectTimeout(
+                        ObjectUtils.defaultIfNull(graphQlEndpoint.getConnectTimeout(),
+                                properties.getConnectTimeout()))))
+                .build());
     }
 
     @PostConstruct
