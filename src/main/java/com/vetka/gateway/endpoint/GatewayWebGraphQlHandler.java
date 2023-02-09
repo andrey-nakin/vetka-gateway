@@ -45,8 +45,7 @@ public class GatewayWebGraphQlHandler {
         if (true) {
             final var endpoints = graphQlSchemaRegistryService.getEndpoints();
             if (!endpoints.isEmpty()) {
-                return transportService.proxyRequest(serverRequest, requestWrapper,
-                        endpoints.get(0).getGraphQlEndpoint());
+                return transportService.proxyRequest(serverRequest, requestWrapper, endpoints.get(0));
             }
         }
 

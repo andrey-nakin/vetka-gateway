@@ -1,8 +1,8 @@
 package com.vetka.gateway.transport.httpclient.service;
 
 import com.vetka.gateway.endpoint.bo.WebGraphQlRequestWrapper;
-import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
 import com.vetka.gateway.objectmap.service.ObjectMapperHelper;
+import com.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import com.vetka.gateway.transport.api.ITransportService;
 import com.vetka.gateway.transport.httpclient.properties.HttpClientProperties;
 import jakarta.annotation.PostConstruct;
@@ -34,8 +34,9 @@ public class HttpClientTransportService implements ITransportService {
 
     public Mono<ServerResponse> proxyRequest(@NonNull final ServerRequest serverRequest,
             @NonNull final WebGraphQlRequestWrapper webGraphQlRequestWrapper,
-            @NonNull final GraphQlEndpoint graphQlEndpoint) {
+            @NonNull final GraphQlEndpointInfo graphQlEndpointInfo) {
 
+        final var graphQlEndpoint = graphQlEndpointInfo.getGraphQlEndpoint();
         log.debug("proxying request to {}", graphQlEndpoint.getAddress());
 
         final var client = HttpClient.newBuilder()
