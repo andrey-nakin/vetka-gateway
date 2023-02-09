@@ -13,25 +13,28 @@ import org.springframework.graphql.ResponseField;
 import org.springframework.graphql.server.WebGraphQlRequest;
 import org.springframework.graphql.server.WebGraphQlResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 @Component
 @Slf4j
 public class GatewayWebGraphQlHandler {
 
-    public Mono<WebGraphQlResponse> handleRequest(@NonNull final WebGraphQlRequest request) {
+    public Mono<ServerResponse> handleRequest(@NonNull final WebGraphQlRequest request) {
         log.info("handleRequest {}", request.getDocument());
+
+        final var executionInput = new ExecutionInput.Builder().executionId(request.getExecutionId())
+                .query(request.getDocument())
+                .operationName(request.getOperationName())
+                .variables(request.getVariables())
+                .extensions(request.getExtensions())
+                .locale(request.getLocale())
+                .build();
 
         final var response = new WebGraphQlResponse(new ExecutionGraphQlResponse() {
             @Override
             public ExecutionInput getExecutionInput() {
-                return new ExecutionInput.Builder().executionId(request.getExecutionId())
-                        .query(request.getDocument())
-                        .operationName(request.getOperationName())
-                        .variables(request.getVariables())
-                        .extensions(request.getExtensions())
-                        .locale(request.getLocale())
-                        .build();
+                return executionInput;
             }
 
             @Override
@@ -94,6 +97,17 @@ public class GatewayWebGraphQlHandler {
                 return null;
             }
         });
-        return Mono.just(response);
+
+        return toServerResponse(response);
+    }
+
+    private Mono<ServerResponse> toServerResponse(final WebGraphQlResponse response) {
+        if (log.isDebugEnabled()) {
+            log.debug("complete");
+        }
+        final ServerResponse.BodyBuilder builder = ServerResponse.ok();
+        builder.headers(headers -> headers.putAll(response.getResponseHeaders()));
+        builder.contentType(GatewayHttpHandler.MEDIA_TYPE);
+        return builder.bodyValue(response.toMap());
     }
 }

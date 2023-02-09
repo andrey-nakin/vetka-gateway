@@ -34,14 +34,6 @@ public class GatewayHttpHandler {
             }
 
             return gatewayWebGraphQlHandler.handleRequest(graphQlRequest);
-        }).flatMap(response -> {
-            if (log.isDebugEnabled()) {
-                log.debug("complete");
-            }
-            final ServerResponse.BodyBuilder builder = ServerResponse.ok();
-            builder.headers(headers -> headers.putAll(response.getResponseHeaders()));
-            builder.contentType(MEDIA_TYPE);
-            return builder.bodyValue(response.toMap());
         });
     }
 }
