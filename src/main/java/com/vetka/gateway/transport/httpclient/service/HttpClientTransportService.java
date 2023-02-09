@@ -52,10 +52,11 @@ public class HttpClientTransportService implements ITransportService {
                             .writeValueAsString(
                                     webGraphQlRequestWrapper.body())))  //  TODO: inefficient on long requests
                     .headers(headers(serverRequest.headers()))
-                    .header("Content-Type", "application/json");
+                    .header("Content-Type", "application/json")
+                    .build();
 
             final var client = httpClient(graphQlEndpointInfo);
-            return Mono.fromFuture(client.sendAsync(request.build(),
+            return Mono.fromFuture(client.sendAsync(request,
                             HttpResponse.BodyHandlers.ofString())) //  TODO: inefficient on long responses
                     .flatMap(httpResponse -> ServerResponse.status(httpResponse.statusCode())
                             .headers(headers -> headers.putAll(httpResponse.headers().map()))
