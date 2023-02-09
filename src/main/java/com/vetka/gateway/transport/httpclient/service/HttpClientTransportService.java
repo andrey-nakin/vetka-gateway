@@ -12,6 +12,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +43,6 @@ public class HttpClientTransportService implements ITransportService {
         }
 
         try {
-            final var client = httpClient(graphQlEndpointInfo);
             final var request = HttpRequest.newBuilder()
                     .uri(URI.create(graphQlEndpointInfo.getGraphQlEndpoint().getAddress()))
                     .timeout(Duration.ofSeconds(validateReadTimeout(
@@ -50,16 +51,10 @@ public class HttpClientTransportService implements ITransportService {
                     .POST(HttpRequest.BodyPublishers.ofString(objectMapperHelper.getObjectMapper()
                             .writeValueAsString(
                                     webGraphQlRequestWrapper.body())))  //  TODO: inefficient on long requests
+                    .headers(headers(serverRequest.headers()))
                     .header("Content-Type", "application/json");
-            serverRequest.headers()
-                    .asHttpHeaders()
-                    .forEach((headerName, headerValues) -> headerValues.forEach(value -> {
-                        if (!StringUtils.equalsAnyIgnoreCase(headerName, "Content-Length", "Content-Type",
-                                "Accept-Encoding", "Connection")) {
-                            request.header(headerName, value);
-                        }
-                    }));
 
+            final var client = httpClient(graphQlEndpointInfo);
             return Mono.fromFuture(client.sendAsync(request.build(),
                             HttpResponse.BodyHandlers.ofString())) //  TODO: inefficient on long responses
                     .flatMap(httpResponse -> ServerResponse.status(httpResponse.statusCode())
@@ -68,6 +63,18 @@ public class HttpClientTransportService implements ITransportService {
         } catch (IOException e) {
             return Mono.error(e);
         }
+    }
+
+    private static String[] headers(final ServerRequest.Headers headers) {
+        final List<String> result = new ArrayList<>();
+        headers.asHttpHeaders().forEach((headerName, headerValues) -> headerValues.forEach(value -> {
+            if (!StringUtils.equalsAnyIgnoreCase(headerName, "Content-Length", "Content-Type", "Accept-Encoding",
+                    "Connection")) {
+                result.add(headerName);
+                result.add(value);
+            }
+        }));
+        return result.toArray(new String[0]);
     }
 
     private HttpClient httpClient(final GraphQlEndpointInfo graphQlEndpointInfo) {
