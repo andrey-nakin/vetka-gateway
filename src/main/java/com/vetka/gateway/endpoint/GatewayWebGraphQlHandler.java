@@ -1,26 +1,37 @@
 package com.vetka.gateway.endpoint;
 
+import com.vetka.gateway.endpoint.bo.WebGraphQlRequestWrapper;
+import com.vetka.gateway.transport.api.ITransportService;
+import com.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQLError;
 import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.graphql.ExecutionGraphQlResponse;
 import org.springframework.graphql.ResponseError;
 import org.springframework.graphql.ResponseField;
-import org.springframework.graphql.server.WebGraphQlRequest;
 import org.springframework.graphql.server.WebGraphQlResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class GatewayWebGraphQlHandler {
 
-    public Mono<ServerResponse> handleRequest(@NonNull final WebGraphQlRequest request) {
+    private final GraphQlSchemaRegistryService graphQlSchemaRegistryService;
+    private final ITransportService transportService;
+
+    public Mono<ServerResponse> handleRequest(@NonNull final ServerRequest serverRequest,
+            @NonNull final WebGraphQlRequestWrapper requestWrapper) {
+
+        final var request = requestWrapper.request();
         log.info("handleRequest {}", request.getDocument());
 
         final var executionInput = new ExecutionInput.Builder().executionId(request.getExecutionId())
@@ -30,6 +41,14 @@ public class GatewayWebGraphQlHandler {
                 .extensions(request.getExtensions())
                 .locale(request.getLocale())
                 .build();
+
+        if (true) {
+            final var endpoints = graphQlSchemaRegistryService.getEndpoints();
+            if (!endpoints.isEmpty()) {
+                return transportService.proxyRequest(serverRequest, requestWrapper,
+                        endpoints.get(0).getGraphQlEndpoint());
+            }
+        }
 
         final var response = new WebGraphQlResponse(new ExecutionGraphQlResponse() {
             @Override

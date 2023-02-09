@@ -1,5 +1,6 @@
 package com.vetka.gateway.endpoint;
 
+import com.vetka.gateway.endpoint.bo.WebGraphQlRequestWrapper;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ public class GatewayHttpHandler {
                 log.debug("handle {}", graphQlRequest);
             }
 
-            return gatewayWebGraphQlHandler.handleRequest(graphQlRequest);
+            return gatewayWebGraphQlHandler.handleRequest(serverRequest, new WebGraphQlRequestWrapper(graphQlRequest, body));
         });
     }
 }

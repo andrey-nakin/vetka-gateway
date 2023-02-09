@@ -18,6 +18,9 @@ public class GraphQlEndpoint implements IEndpoint {
     private final String address;
     @NonNull
     private final String schema;
+    private final String httpVersion;
+    private final Integer connectTimeout;
+    private final Integer readTimeout;
 
     @Override
     public String toString() {
