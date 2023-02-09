@@ -8,6 +8,9 @@ type GraphQlEndpoint implements IEndpoint {
   name: String!
   address: String!
   schema: String!
+  httpVersion: String
+  connectTimeout: Int
+  readTimeout: Int
 }
 
 union GraphQlEndpointCreationPayload = GraphQlEndpointCreationResponse | GraphQlEndpointCreationErrors
@@ -43,6 +46,9 @@ input GraphQlEndpointCreationInput {
   name: String!
   address: String!
   schema: String!
+  httpVersion: String
+  connectTimeout: Int
+  readTimeout: Int
 }
 
 input GraphQlEndpointUpdateInput {
@@ -50,4 +56,7 @@ input GraphQlEndpointUpdateInput {
   name: String
   address: String
   schema: String
+  httpVersion: String
+  connectTimeout: Int
+  readTimeout: Int
 }

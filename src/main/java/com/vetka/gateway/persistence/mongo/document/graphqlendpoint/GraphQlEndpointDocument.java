@@ -13,9 +13,13 @@ public class GraphQlEndpointDocument {
 
     @Id
     private String id;
+    @NonNull
     private String name;
     @NonNull
     private String address;
     @NonNull
     private String schema;
+    private String httpVersion;
+    private Integer connectTimeout;
+    private Integer readTimeout;
 }
