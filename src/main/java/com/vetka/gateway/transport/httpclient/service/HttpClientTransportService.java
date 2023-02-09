@@ -36,7 +36,7 @@ public class HttpClientTransportService implements ITransportService {
             @NonNull final WebGraphQlRequestWrapper webGraphQlRequestWrapper,
             @NonNull final GraphQlEndpoint graphQlEndpoint) {
 
-        log.info("proxying request to {}", graphQlEndpoint.getAddress());
+        log.debug("proxying request to {}", graphQlEndpoint.getAddress());
 
         final var client = HttpClient.newBuilder()
                 .version(validateHttpVersion(
@@ -52,8 +52,9 @@ public class HttpClientTransportService implements ITransportService {
                     .uri(URI.create(graphQlEndpoint.getAddress()))
                     .timeout(Duration.ofSeconds(validateReadTimeout(
                             ObjectUtils.defaultIfNull(graphQlEndpoint.getReadTimeout(), properties.getReadTimeout()))))
-                    .POST(HttpRequest.BodyPublishers.ofString(
-                            objectMapperHelper.getObjectMapper().writeValueAsString(webGraphQlRequestWrapper.body())))
+                    .POST(HttpRequest.BodyPublishers.ofString(objectMapperHelper.getObjectMapper()
+                            .writeValueAsString(
+                                    webGraphQlRequestWrapper.body())))  //  TODO: inefficient on long requests
                     .header("Content-Type", "application/json");
             serverRequest.headers()
                     .asHttpHeaders()
@@ -64,7 +65,8 @@ public class HttpClientTransportService implements ITransportService {
                         }
                     }));
 
-            return Mono.fromFuture(client.sendAsync(request.build(), HttpResponse.BodyHandlers.ofString()))
+            return Mono.fromFuture(client.sendAsync(request.build(),
+                            HttpResponse.BodyHandlers.ofString())) //  TODO: inefficient on long responses
                     .flatMap(httpResponse -> ServerResponse.status(httpResponse.statusCode())
                             .headers(headers -> headers.putAll(httpResponse.headers().map()))
                             .bodyValue(httpResponse.body()));
@@ -75,7 +77,7 @@ public class HttpClientTransportService implements ITransportService {
 
     @PostConstruct
     void init() {
-        System.getProperties().setProperty("jdk.httpclient.allowRestrictedHeaders", "host");
+        System.getProperties().setProperty("jdk.httpclient.allowRestrictedHeaders", "Host");
     }
 
     private static Integer validateConnectTimeout(final Integer connectTimeout) {
