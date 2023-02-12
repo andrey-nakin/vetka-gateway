@@ -2,14 +2,22 @@ package com.vetka.gateway.schema.service;
 
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
 import com.vetka.gateway.persistence.api.IPersistenceServiceFacade;
+import com.vetka.gateway.schema.bo.GraphQlSchemaInfo;
 import com.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import com.vetka.gateway.schema.exception.SchemaConflictException;
+import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
+import graphql.schema.GraphQLSchema;
+import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
+import graphql.schema.idl.SchemaParser;
+import graphql.schema.idl.TypeDefinitionRegistry;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -28,12 +36,12 @@ public class GraphQlSchemaRegistryService {
     private final IPersistenceServiceFacade persistenceServiceFacade;
 
     @Getter
-    private volatile List<GraphQlEndpointInfo> endpoints;
+    private volatile GraphQlSchemaInfo info;
 
     public void reloadSchemas() {
-        final var result = reloadAndParse();
-        this.endpoints = result;
-        log.info("endpoints loaded: {}", result.size());
+        final var endpoints = reloadAndParse();
+        this.info = new GraphQlSchemaInfo(buildSchema(endpoints), endpoints);
+        log.info("endpoints loaded: {}", endpoints.size());
     }
 
     @PostConstruct
@@ -58,6 +66,7 @@ public class GraphQlSchemaRegistryService {
         final var schema = SchemaGenerator.createdMockedSchema(graphQlEndpoint.getSchema());
         final var result = GraphQlEndpointInfo.builder()
                 .graphQlEndpoint(graphQlEndpoint)
+                .schema(schema)
                 .queries(fieldNames(schema.getQueryType()))
                 .mutations(fieldNames(schema.getMutationType()))
                 .subscriptions(fieldNames(schema.getSubscriptionType()))
@@ -115,5 +124,36 @@ public class GraphQlSchemaRegistryService {
 
     private static <T> Set<T> intersection(@NonNull final Set<T> a, @NonNull final Set<T> b) {
         return a.stream().filter(b::contains).collect(Collectors.toSet());
+    }
+
+    private GraphQLSchema buildSchema(final List<GraphQlEndpointInfo> endpoints) {
+        final var typeDefinitionRegistry = new TypeDefinitionRegistry();
+        final Map<String, DataFetcher> queryDataFetchers = new HashMap<>();
+        final Map<String, DataFetcher> mutationDataFetchers = new HashMap<>();
+        final Map<String, DataFetcher> subscriptionDataFetchers = new HashMap<>();
+
+        for (final var ep : endpoints) {
+            final var schemaParser = new SchemaParser();
+            final var epTdr = schemaParser.parse(ep.getGraphQlEndpoint().getSchema());
+            typeDefinitionRegistry.merge(epTdr);
+
+            ep.getQueries()
+                    .forEach(fieldName -> queryDataFetchers.put(fieldName, new GraphQlQueryDataFetcher(fieldName, ep)));
+            ep.getMutations()
+                    .forEach(fieldName -> mutationDataFetchers.put(fieldName,
+                            new GraphQlMutationDataFetcher(fieldName, ep)));
+            ep.getSubscriptions()
+                    .forEach(fieldName -> subscriptionDataFetchers.put(fieldName,
+                            new GraphQlSubscriptionDataFetcher(fieldName, ep)));
+        }
+
+        final var runtimeWiring = RuntimeWiring.newRuntimeWiring()
+                .type("Query", builder -> builder.dataFetchers(queryDataFetchers))
+                .type("Mutation", builder -> builder.dataFetchers(mutationDataFetchers))
+                .type("Subscription", builder -> builder.dataFetchers(subscriptionDataFetchers))
+                .build();
+
+        final var schemaGenerator = new SchemaGenerator();
+        return schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
     }
 }

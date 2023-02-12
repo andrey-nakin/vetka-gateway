@@ -1,6 +1,7 @@
 package com.vetka.gateway.schema.bo;
 
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
+import graphql.schema.GraphQLSchema;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,6 +16,9 @@ public class GraphQlEndpointInfo {
 
     @NonNull
     private final GraphQlEndpoint graphQlEndpoint;
+
+    @NonNull
+    private final GraphQLSchema schema;
 
     @NonNull
     private final Set<String> queries, mutations, subscriptions;

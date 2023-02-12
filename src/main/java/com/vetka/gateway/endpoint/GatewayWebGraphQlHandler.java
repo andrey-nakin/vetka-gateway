@@ -5,7 +5,7 @@ import com.vetka.gateway.transport.api.ITransportService;
 import com.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
-import graphql.GraphQLError;
+import graphql.GraphQL;
 import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
@@ -34,16 +34,15 @@ public class GatewayWebGraphQlHandler {
         final var request = requestWrapper.request();
         log.info("handleRequest {}", request.getDocument());
 
-        final var executionInput = new ExecutionInput.Builder().executionId(request.getExecutionId())
-                .query(request.getDocument())
-                .operationName(request.getOperationName())
-                .variables(request.getVariables())
-                .extensions(request.getExtensions())
-                .locale(request.getLocale())
-                .build();
+        final var schemaInfo = graphQlSchemaRegistryService.getInfo();
+        final var build = GraphQL.newGraphQL(schemaInfo.getSchema()).build();
+        final var executionInput = requestWrapper.request()
+                .toExecutionInput()
+                .transform(b -> b.localContext(new GatewayLocalContext(schemaInfo)));
+        final var executionResult = build.execute(executionInput);
 
-        if (true) {
-            final var endpoints = graphQlSchemaRegistryService.getEndpoints();
+        if (false) {
+            final var endpoints = schemaInfo.getEndpoints();
             if (!endpoints.isEmpty()) {
                 return transportService.proxyRequest(serverRequest, requestWrapper, endpoints.get(0));
             }
@@ -57,32 +56,7 @@ public class GatewayWebGraphQlHandler {
 
             @Override
             public ExecutionResult getExecutionResult() {
-                return new ExecutionResult() {
-                    @Override
-                    public List<GraphQLError> getErrors() {
-                        return null;
-                    }
-
-                    @Override
-                    public <T> T getData() {
-                        return (T) "test";
-                    }
-
-                    @Override
-                    public boolean isDataPresent() {
-                        return false;
-                    }
-
-                    @Override
-                    public Map<Object, Object> getExtensions() {
-                        return null;
-                    }
-
-                    @Override
-                    public Map<String, Object> toSpecification() {
-                        return Map.of();
-                    }
-                };
+                return executionResult;
             }
 
             @Override
@@ -92,7 +66,7 @@ public class GatewayWebGraphQlHandler {
 
             @Override
             public <T> T getData() {
-                return null;
+                return executionResult.getData();
             }
 
             @Override
