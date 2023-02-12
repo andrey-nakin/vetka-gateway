@@ -36,9 +36,12 @@ public class GatewayWebGraphQlHandler {
 
         final var schemaInfo = graphQlSchemaRegistryService.getInfo();
         final var build = GraphQL.newGraphQL(schemaInfo.getSchema()).build();
-        final var executionInput = requestWrapper.request()
-                .toExecutionInput()
-                .transform(b -> b.localContext(new GatewayLocalContext(schemaInfo)));
+        final var localContext = new GatewayLocalContext(schemaInfo);
+        requestWrapper.request()
+                .configureExecutionInput((ei, b) -> b.localContext(localContext)
+                        .dataLoaderRegistry(localContext.getDataLoaderRegistry())
+                        .build());
+        final var executionInput = requestWrapper.request().toExecutionInput();
         final var executionResult = build.execute(executionInput);
 
         if (false) {
