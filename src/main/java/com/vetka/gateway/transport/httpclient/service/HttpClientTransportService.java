@@ -11,7 +11,6 @@ import com.vetka.gateway.transport.api.exception.GraphQlHttpErrorException;
 import com.vetka.gateway.transport.api.exception.GraphQlJsonMappingException;
 import com.vetka.gateway.transport.api.exception.GraphQlJsonProcessingException;
 import com.vetka.gateway.transport.httpclient.properties.HttpClientProperties;
-import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -27,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.graphql.GraphQlResponse;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -39,6 +39,9 @@ public class HttpClientTransportService implements ITransportService {
     private static final HttpClient.Version DEFAULT_HTTP_VERSION = HttpClient.Version.HTTP_1_1;
     private static final Integer DEFAULT_CONNECT_TIMEOUT = 30;
     private static final Integer DEFAULT_READ_TIMEOUT = 600;
+    private static final String[] UNTRANSMITTABLE_HTTP_HEADERS = new String[]{
+            "Content-Length", "Content-Type", "Connection", "Host", "Accept", "Accept-Encoding"
+    };
 
     private final HttpClientProperties properties;
     private final ObjectMapperHelper objectMapperHelper;
@@ -61,6 +64,7 @@ public class HttpClientTransportService implements ITransportService {
                             .writeValueAsString(
                                     webGraphQlRequestWrapper.body())))  //  TODO: inefficient on long requests
                     .headers(headers(serverRequest.headers()))
+                    .header("Accept", GraphQlConstants.MEDIA_TYPE.toString())
                     .header("Content-Type", GraphQlConstants.MEDIA_TYPE.toString())
                     .build();
 
@@ -76,7 +80,9 @@ public class HttpClientTransportService implements ITransportService {
     }
 
     @Override
-    public CompletionStage<GraphQlResponse> request(final String query, final GraphQlEndpointInfo graphQlEndpointInfo) {
+    public CompletionStage<GraphQlResponse> request(final HttpHeaders httpHeaders, final String query,
+            final GraphQlEndpointInfo graphQlEndpointInfo) {
+
         if (log.isDebugEnabled()) {
             log.debug("sending request to {}", graphQlEndpointInfo.getGraphQlEndpoint().getAddress());
         }
@@ -87,6 +93,8 @@ public class HttpClientTransportService implements ITransportService {
                         ObjectUtils.defaultIfNull(graphQlEndpointInfo.getGraphQlEndpoint().getReadTimeout(),
                                 properties.getReadTimeout()))))
                 .POST(HttpRequest.BodyPublishers.ofString(query))
+                .headers(headers(httpHeaders))
+                .header("Accept", GraphQlConstants.MEDIA_TYPE.toString())
                 .header("Content-Type", GraphQlConstants.MEDIA_TYPE.toString())
                 .build();
 
@@ -112,10 +120,13 @@ public class HttpClientTransportService implements ITransportService {
     }
 
     private static String[] headers(final ServerRequest.Headers headers) {
-        final List<String> result = new ArrayList<>();
-        headers.asHttpHeaders().forEach((headerName, headerValues) -> headerValues.forEach(value -> {
-            if (!StringUtils.equalsAnyIgnoreCase(headerName, "Content-Length", "Content-Type", "Accept-Encoding",
-                    "Connection")) {
+        return headers(headers.asHttpHeaders());
+    }
+
+    private static String[] headers(final HttpHeaders httpHeaders) {
+        final List<String> result = new ArrayList<>(httpHeaders.size());
+        httpHeaders.forEach((headerName, headerValues) -> headerValues.forEach(value -> {
+            if (!StringUtils.equalsAnyIgnoreCase(headerName, UNTRANSMITTABLE_HTTP_HEADERS)) {
                 result.add(headerName);
                 result.add(value);
             }
@@ -133,11 +144,6 @@ public class HttpClientTransportService implements ITransportService {
                         ObjectUtils.defaultIfNull(graphQlEndpoint.getConnectTimeout(),
                                 properties.getConnectTimeout()))))
                 .build());
-    }
-
-    @PostConstruct
-    void init() {
-        System.getProperties().setProperty("jdk.httpclient.allowRestrictedHeaders", "Host");
     }
 
     private static Integer validateConnectTimeout(final Integer connectTimeout) {
