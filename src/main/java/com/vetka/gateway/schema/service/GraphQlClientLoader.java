@@ -69,11 +69,6 @@ public class GraphQlClientLoader implements MappedBatchLoaderWithContext<DataFet
             }
             return result;
         });
-
-        //        return CompletableFuture.completedFuture(keys.stream()
-        //                .collect(Collectors.toMap(Function.identity(), key -> List.of(Map.of("name",
-        //                        "Russia " + ((GraphQLObjectType) key.getParentType()).getName() + "/" + key.getField()
-        //                                .getName() + "/" + key.getField().getAlias())))));
     }
 
     private static void addField(final StringBuilder sb, final SelectedField field) {
