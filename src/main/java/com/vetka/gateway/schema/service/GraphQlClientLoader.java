@@ -41,6 +41,7 @@ public class GraphQlClientLoader implements MappedBatchLoaderWithContext<DataFet
             if (data != null) {
                 data.forEach((key, value) -> result.put(keyMap.get(key), value));
             }
+            // TODO handle errors and extensions
             return result;
         });
     }
