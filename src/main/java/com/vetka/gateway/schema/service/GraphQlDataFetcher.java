@@ -2,10 +2,10 @@ package com.vetka.gateway.schema.service;
 
 import com.vetka.gateway.endpoint.GatewayLocalContext;
 import com.vetka.gateway.schema.bo.GraphQlEndpointInfo;
+import com.vetka.gateway.transport.api.ITransportService;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import java.util.concurrent.CompletionStage;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.dataloader.DataLoader;
 import org.dataloader.DataLoaderFactory;
@@ -13,7 +13,7 @@ import org.dataloader.DataLoaderFactory;
 @RequiredArgsConstructor
 public class GraphQlDataFetcher implements DataFetcher<CompletionStage<Object>> {
 
-    @Getter
+    private final ITransportService transportService;
     private final GraphQlEndpointInfo graphQlEndpointInfo;
 
     @Override
@@ -22,8 +22,8 @@ public class GraphQlDataFetcher implements DataFetcher<CompletionStage<Object>> 
 
         final var key = graphQlEndpointInfo.getGraphQlEndpoint().getId();
         final DataLoader<DataFetchingEnvironment, Object> dataLoader = context.getDataLoaderRegistry()
-                .computeIfAbsent(key,
-                        unused -> DataLoaderFactory.newMappedDataLoader(new GraphQlClientLoader(graphQlEndpointInfo)));
+                .computeIfAbsent(key, unused -> DataLoaderFactory.newMappedDataLoader(
+                        new GraphQlClientLoader(transportService, graphQlEndpointInfo)));
         return dataLoader.load(environment);
     }
 }

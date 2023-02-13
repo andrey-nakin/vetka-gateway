@@ -14,11 +14,13 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.graphql.GraphQlResponse;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
@@ -63,6 +65,39 @@ public class HttpClientTransportService implements ITransportService {
                             .bodyValue(httpResponse.body()));
         } catch (IOException e) {
             return Mono.error(e);
+        }
+    }
+
+    @Override
+    public CompletionStage<GraphQlResponse> request(final String query, final GraphQlEndpointInfo graphQlEndpointInfo) {
+        if (log.isDebugEnabled()) {
+            log.debug("sending request to {}", graphQlEndpointInfo.getGraphQlEndpoint().getAddress());
+        }
+
+        final var request = HttpRequest.newBuilder()
+                .uri(URI.create(graphQlEndpointInfo.getGraphQlEndpoint().getAddress()))
+                .timeout(Duration.ofSeconds(validateReadTimeout(
+                        ObjectUtils.defaultIfNull(graphQlEndpointInfo.getGraphQlEndpoint().getReadTimeout(),
+                                properties.getReadTimeout()))))
+                .POST(HttpRequest.BodyPublishers.ofString(query))
+                .header("Content-Type", "application/json")
+                .build();
+
+        final var client = httpClient(graphQlEndpointInfo);
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())  //  TODO: inefficient on long responses
+                .thenApply(this::parseGraphQlResponse);
+    }
+
+    private GraphQlResponse parseGraphQlResponse(final HttpResponse<String> httpResponse) {
+        if (httpResponse.statusCode() != 200) {
+            throw new RuntimeException(
+                    "Error proxying request: " + httpResponse.statusCode()); //  TODO add proper handling
+        }
+
+        try {
+            return objectMapperHelper.getObjectMapper().readValue(httpResponse.body(), DefaultGraphQlResponse.class);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex); //  TODO add proper handling
         }
     }
 

@@ -5,6 +5,7 @@ import com.vetka.gateway.persistence.api.IPersistenceServiceFacade;
 import com.vetka.gateway.schema.bo.GraphQlSchemaInfo;
 import com.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import com.vetka.gateway.schema.exception.SchemaConflictException;
+import com.vetka.gateway.transport.api.ITransportService;
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
@@ -34,6 +35,7 @@ import org.springframework.stereotype.Service;
 public class GraphQlSchemaRegistryService {
 
     private final IPersistenceServiceFacade persistenceServiceFacade;
+    private final ITransportService transportService;
 
     @Getter
     private volatile GraphQlSchemaInfo info;
@@ -137,7 +139,7 @@ public class GraphQlSchemaRegistryService {
             final var epTdr = schemaParser.parse(ep.getGraphQlEndpoint().getSchema());
             typeDefinitionRegistry.merge(epTdr);
 
-            final var dataFetcher = new GraphQlDataFetcher(ep);
+            final var dataFetcher = new GraphQlDataFetcher(transportService, ep);
             ep.getQueries().forEach(fieldName -> queryDataFetchers.put(fieldName, dataFetcher));
             ep.getMutations().forEach(fieldName -> mutationDataFetchers.put(fieldName, dataFetcher));
             ep.getSubscriptions().forEach(fieldName -> subscriptionDataFetchers.put(fieldName, dataFetcher));
