@@ -5,7 +5,6 @@ import com.vetka.gateway.persistence.api.IPersistenceServiceFacade;
 import com.vetka.gateway.schema.bo.GraphQlSchemaInfo;
 import com.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import com.vetka.gateway.schema.exception.SchemaConflictException;
-import graphql.schema.AsyncDataFetcher;
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
@@ -146,7 +145,6 @@ public class GraphQlSchemaRegistryService {
             ep.getSubscriptions()
                     .forEach(fieldName -> subscriptionDataFetchers.put(fieldName,
                             new GraphQlSubscriptionDataFetcher(fieldName, ep)));
-            var adf = new AsyncDataFetcher<>(new GraphQlSubscriptionDataFetcher("countries", ep));
         }
 
         final var runtimeWiring = RuntimeWiring.newRuntimeWiring()

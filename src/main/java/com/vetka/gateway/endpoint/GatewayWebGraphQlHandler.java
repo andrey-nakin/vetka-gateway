@@ -1,22 +1,14 @@
 package com.vetka.gateway.endpoint;
 
 import com.vetka.gateway.endpoint.bo.WebGraphQlRequestWrapper;
-import com.vetka.gateway.transport.api.ITransportService;
 import com.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
-import graphql.ExecutionInput;
-import graphql.ExecutionResult;
 import graphql.GraphQL;
-import java.util.List;
-import java.util.Map;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.graphql.ExecutionGraphQlResponse;
-import org.springframework.graphql.ResponseError;
-import org.springframework.graphql.ResponseField;
 import org.springframework.graphql.server.WebGraphQlResponse;
+import org.springframework.graphql.support.DefaultExecutionGraphQlResponse;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
@@ -26,13 +18,10 @@ import reactor.core.publisher.Mono;
 public class GatewayWebGraphQlHandler {
 
     private final GraphQlSchemaRegistryService graphQlSchemaRegistryService;
-    private final ITransportService transportService;
 
-    public Mono<ServerResponse> handleRequest(@NonNull final ServerRequest serverRequest,
-            @NonNull final WebGraphQlRequestWrapper requestWrapper) {
-
+    public Mono<ServerResponse> handleRequest(@NonNull final WebGraphQlRequestWrapper requestWrapper) {
         final var request = requestWrapper.request();
-        log.info("handleRequest {}", request.getDocument());
+        log.debug("handleRequest {}", request.getDocument());
 
         final var schemaInfo = graphQlSchemaRegistryService.getInfo();
         final var build = GraphQL.newGraphQL(schemaInfo.getSchema()).build();
@@ -42,58 +31,10 @@ public class GatewayWebGraphQlHandler {
                         .dataLoaderRegistry(localContext.getDataLoaderRegistry())
                         .build());
         final var executionInput = requestWrapper.request().toExecutionInput();
-        final var executionResult = build.execute(executionInput);
-
-        if (false) {
-            final var endpoints = schemaInfo.getEndpoints();
-            if (!endpoints.isEmpty()) {
-                return transportService.proxyRequest(serverRequest, requestWrapper, endpoints.get(0));
-            }
-        }
-
-        final var response = new WebGraphQlResponse(new ExecutionGraphQlResponse() {
-            @Override
-            public ExecutionInput getExecutionInput() {
-                return executionInput;
-            }
-
-            @Override
-            public ExecutionResult getExecutionResult() {
-                return executionResult;
-            }
-
-            @Override
-            public boolean isValid() {
-                return false;
-            }
-
-            @Override
-            public <T> T getData() {
-                return executionResult.getData();
-            }
-
-            @Override
-            public List<ResponseError> getErrors() {
-                return null;
-            }
-
-            @Override
-            public ResponseField field(String path) {
-                return null;
-            }
-
-            @Override
-            public Map<Object, Object> getExtensions() {
-                return null;
-            }
-
-            @Override
-            public Map<String, Object> toMap() {
-                return null;
-            }
-        });
-
-        return toServerResponse(response);
+        return Mono.fromCompletionStage(build.executeAsync(executionInput))
+                .map(executionResult -> new DefaultExecutionGraphQlResponse(executionInput, executionResult))
+                .map(WebGraphQlResponse::new)
+                .flatMap(this::toServerResponse);
     }
 
     private Mono<ServerResponse> toServerResponse(final WebGraphQlResponse response) {

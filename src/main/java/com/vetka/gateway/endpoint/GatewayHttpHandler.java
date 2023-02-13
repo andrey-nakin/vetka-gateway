@@ -34,7 +34,7 @@ public class GatewayHttpHandler {
                 log.debug("handle {}", graphQlRequest);
             }
 
-            return gatewayWebGraphQlHandler.handleRequest(serverRequest, new WebGraphQlRequestWrapper(graphQlRequest, body));
+            return gatewayWebGraphQlHandler.handleRequest(new WebGraphQlRequestWrapper(graphQlRequest, body));
         });
     }
 }
