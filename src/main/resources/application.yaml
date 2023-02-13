@@ -25,4 +25,6 @@ vetka:
 
 logging:
   level:
-    root: DEBUG
+    root: INFO
+    com:
+      vetka: DEBUG
