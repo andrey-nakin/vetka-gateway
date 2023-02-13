@@ -6,13 +6,16 @@ import com.vetka.gateway.schema.bo.GraphQlSchemaInfo;
 import com.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import com.vetka.gateway.schema.exception.SchemaConflictException;
 import com.vetka.gateway.transport.api.ITransportService;
+import graphql.TypeResolutionEnvironment;
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
+import graphql.schema.TypeResolver;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
+import graphql.schema.idl.SchemaPrinter;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
@@ -145,13 +148,28 @@ public class GraphQlSchemaRegistryService {
             ep.getSubscriptions().forEach(fieldName -> subscriptionDataFetchers.put(fieldName, dataFetcher));
         }
 
+        TypeResolver t = new TypeResolver() {
+            @Override
+            public GraphQLObjectType getType(TypeResolutionEnvironment env) {
+                Object javaObject = env.getObject();
+                if (javaObject instanceof Map<?, ?>) {
+                    return env.getSchema().getObjectType((String) ((Map) javaObject).get("__typename"));
+                } else {
+                    throw new IllegalArgumentException("Unsupported java type: " + javaObject.getClass().getName());
+                }
+            }
+        };
+
         final var runtimeWiring = RuntimeWiring.newRuntimeWiring()
                 .type(GraphQlConstants.TYPE_QUERY, builder -> builder.dataFetchers(queryDataFetchers))
                 .type(GraphQlConstants.TYPE_MUTATION, builder -> builder.dataFetchers(mutationDataFetchers))
                 .type(GraphQlConstants.TYPE_SUBSCRIPTION, builder -> builder.dataFetchers(subscriptionDataFetchers))
+                .type("Node", typeWriting -> typeWriting.typeResolver(t))
                 .build();
 
         final var schemaGenerator = new SchemaGenerator();
-        return schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
+        final var result = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
+        log.debug("Superschema\n{}", new SchemaPrinter().print(result));
+        return result;
     }
 }
