@@ -137,12 +137,10 @@ public class GraphQlSchemaRegistryService {
             final var epTdr = schemaParser.parse(ep.getGraphQlEndpoint().getSchema());
             typeDefinitionRegistry.merge(epTdr);
 
-            ep.getQueries().forEach(fieldName -> queryDataFetchers.put(fieldName, new GraphQlQueryDataFetcher(ep)));
-            ep.getMutations()
-                    .forEach(fieldName -> mutationDataFetchers.put(fieldName, new GraphQlMutationDataFetcher(ep)));
-            ep.getSubscriptions()
-                    .forEach(fieldName -> subscriptionDataFetchers.put(fieldName,
-                            new GraphQlSubscriptionDataFetcher(ep)));
+            final var dataFetcher = new GraphQlDataFetcher(ep);
+            ep.getQueries().forEach(fieldName -> queryDataFetchers.put(fieldName, dataFetcher));
+            ep.getMutations().forEach(fieldName -> mutationDataFetchers.put(fieldName, dataFetcher));
+            ep.getSubscriptions().forEach(fieldName -> subscriptionDataFetchers.put(fieldName, dataFetcher));
         }
 
         final var runtimeWiring = RuntimeWiring.newRuntimeWiring()
