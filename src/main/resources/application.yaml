@@ -22,3 +22,7 @@ vetka:
       engine: mongo
       mongo:
         database-name: "vetka_gateway"
+
+logging:
+  level:
+    root: DEBUG

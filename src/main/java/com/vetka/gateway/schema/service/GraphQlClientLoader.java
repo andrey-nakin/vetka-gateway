@@ -13,27 +13,24 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.dataloader.BatchLoaderEnvironment;
-import org.dataloader.MappedBatchLoaderWithContext;
+import org.dataloader.MappedBatchLoader;
 
 @RequiredArgsConstructor
 @Slf4j
-public class GraphQlClientLoader implements MappedBatchLoaderWithContext<DataFetchingEnvironment, Object> {
+public class GraphQlClientLoader implements MappedBatchLoader<DataFetchingEnvironment, Object> {
 
     private final ITransportService transportService;
     private final GraphQlEndpointInfo graphQlEndpointInfo;
 
     @Override
-    public CompletionStage<Map<DataFetchingEnvironment, Object>> load(Set<DataFetchingEnvironment> keys,
-            BatchLoaderEnvironment environment) {
-
+    public CompletionStage<Map<DataFetchingEnvironment, Object>> load(final Set<DataFetchingEnvironment> keys) {
         final var keyMap = keys.stream()
                 .collect(Collectors.toMap(
                         k -> StringUtils.defaultIfBlank(k.getField().getAlias(), k.getField().getName()),
                         Function.identity()));
 
         final var query = GraphQlQueryBuilder.build(keys);
-        log.debug("Sending query to {}\n{}", graphQlEndpointInfo.getGraphQlEndpoint().getAddress(), query);
+        log.debug("Sending GraphQL request to {}: {}", graphQlEndpointInfo.getGraphQlEndpoint().getAddress(), query);
 
         return transportService.request(query, graphQlEndpointInfo).thenApply(response -> {
             final var result = new HashMap<DataFetchingEnvironment, Object>();

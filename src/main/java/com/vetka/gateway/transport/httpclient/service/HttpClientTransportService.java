@@ -6,6 +6,9 @@ import com.vetka.gateway.endpoint.bo.WebGraphQlRequestWrapper;
 import com.vetka.gateway.objectmap.service.ObjectMapperHelper;
 import com.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import com.vetka.gateway.transport.api.ITransportService;
+import com.vetka.gateway.transport.api.exception.GraphQlHttpErrorException;
+import com.vetka.gateway.transport.api.exception.GraphQlJsonMappingException;
+import com.vetka.gateway.transport.api.exception.GraphQlJsonProcessingException;
 import com.vetka.gateway.transport.httpclient.properties.HttpClientProperties;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
@@ -23,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.graphql.GraphQlResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
@@ -87,21 +91,22 @@ public class HttpClientTransportService implements ITransportService {
 
         final var client = httpClient(graphQlEndpointInfo);
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())  //  TODO: inefficient on long responses
-                .thenApply(this::parseGraphQlResponse);
+                .thenApply(httpResponse -> parseGraphQlResponse(httpResponse, graphQlEndpointInfo));
     }
 
-    private GraphQlResponse parseGraphQlResponse(final HttpResponse<String> httpResponse) {
-        if (httpResponse.statusCode() != 200) {
-            throw new RuntimeException(
-                    "Error proxying request: " + httpResponse.statusCode()); //  TODO add proper handling
+    private GraphQlResponse parseGraphQlResponse(final HttpResponse<String> httpResponse,
+            final GraphQlEndpointInfo graphQlEndpointInfo) {
+
+        if (httpResponse.statusCode() != HttpStatus.OK.value()) {
+            throw new GraphQlHttpErrorException(httpResponse.statusCode(), graphQlEndpointInfo);
         }
 
         try {
             return objectMapperHelper.getObjectMapper().readValue(httpResponse.body(), DefaultGraphQlResponse.class);
         } catch (JsonMappingException ex) {
-            throw new RuntimeException(ex); //  TODO add proper handling
+            throw new GraphQlJsonMappingException(ex, graphQlEndpointInfo);
         } catch (JsonProcessingException ex) {
-            throw new RuntimeException(ex); //  TODO add proper handling
+            throw new GraphQlJsonProcessingException(ex, graphQlEndpointInfo);
         }
     }
 
