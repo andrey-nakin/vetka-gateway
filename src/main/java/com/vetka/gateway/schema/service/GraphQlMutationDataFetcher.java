@@ -4,7 +4,7 @@ import com.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 
 public class GraphQlMutationDataFetcher extends AbstractGraphQlDataFetcher {
 
-    public GraphQlMutationDataFetcher(String fieldName, GraphQlEndpointInfo graphQlEndpointInfo) {
-        super(fieldName, graphQlEndpointInfo);
+    public GraphQlMutationDataFetcher(GraphQlEndpointInfo graphQlEndpointInfo) {
+        super(graphQlEndpointInfo);
     }
 }
