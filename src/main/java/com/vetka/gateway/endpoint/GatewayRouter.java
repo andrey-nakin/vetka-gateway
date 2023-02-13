@@ -1,6 +1,7 @@
 package com.vetka.gateway.endpoint;
 
 import com.vetka.gateway.endpoint.properties.EndpointProperties;
+import com.vetka.gateway.schema.service.GraphQlConstants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RequestPredicates;
@@ -16,6 +17,6 @@ public class GatewayRouter {
             final GatewayHttpHandler gatewayHttpHandler) {
 
         return RouterFunctions.route(RequestPredicates.POST(endpointProperties.getPath())
-                .and(RequestPredicates.accept(GatewayHttpHandler.MEDIA_TYPE)), gatewayHttpHandler::handleRequest);
+                .and(RequestPredicates.accept(GraphQlConstants.MEDIA_TYPE)), gatewayHttpHandler::handleRequest);
     }
 }

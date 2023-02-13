@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.vetka.gateway.endpoint.bo.WebGraphQlRequestWrapper;
 import com.vetka.gateway.objectmap.service.ObjectMapperHelper;
 import com.vetka.gateway.schema.bo.GraphQlEndpointInfo;
+import com.vetka.gateway.schema.service.GraphQlConstants;
 import com.vetka.gateway.transport.api.ITransportService;
 import com.vetka.gateway.transport.api.exception.GraphQlHttpErrorException;
 import com.vetka.gateway.transport.api.exception.GraphQlJsonMappingException;
@@ -60,7 +61,7 @@ public class HttpClientTransportService implements ITransportService {
                             .writeValueAsString(
                                     webGraphQlRequestWrapper.body())))  //  TODO: inefficient on long requests
                     .headers(headers(serverRequest.headers()))
-                    .header("Content-Type", "application/json")
+                    .header("Content-Type", GraphQlConstants.MEDIA_TYPE.toString())
                     .build();
 
             final var client = httpClient(graphQlEndpointInfo);
@@ -86,7 +87,7 @@ public class HttpClientTransportService implements ITransportService {
                         ObjectUtils.defaultIfNull(graphQlEndpointInfo.getGraphQlEndpoint().getReadTimeout(),
                                 properties.getReadTimeout()))))
                 .POST(HttpRequest.BodyPublishers.ofString(query))
-                .header("Content-Type", "application/json")
+                .header("Content-Type", GraphQlConstants.MEDIA_TYPE.toString())
                 .build();
 
         final var client = httpClient(graphQlEndpointInfo);

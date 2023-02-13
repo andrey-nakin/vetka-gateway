@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.graphql.server.WebGraphQlRequest;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -16,8 +15,6 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @Slf4j
 public class GatewayHttpHandler {
-
-    public static final MediaType MEDIA_TYPE = MediaType.APPLICATION_JSON;
 
     private static final ParameterizedTypeReference<Map<String, Object>> TYPE_REF =
             new ParameterizedTypeReference<>() {};

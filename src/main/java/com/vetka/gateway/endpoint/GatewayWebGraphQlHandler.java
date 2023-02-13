@@ -1,6 +1,7 @@
 package com.vetka.gateway.endpoint;
 
 import com.vetka.gateway.endpoint.bo.WebGraphQlRequestWrapper;
+import com.vetka.gateway.schema.service.GraphQlConstants;
 import com.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
 import graphql.GraphQL;
 import lombok.NonNull;
@@ -43,7 +44,7 @@ public class GatewayWebGraphQlHandler {
         }
         final ServerResponse.BodyBuilder builder = ServerResponse.ok();
         builder.headers(headers -> headers.putAll(response.getResponseHeaders()));
-        builder.contentType(GatewayHttpHandler.MEDIA_TYPE);
+        builder.contentType(GraphQlConstants.MEDIA_TYPE);
         return builder.bodyValue(response.toMap());
     }
 }
