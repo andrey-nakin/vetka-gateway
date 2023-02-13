@@ -146,9 +146,9 @@ public class GraphQlSchemaRegistryService {
         }
 
         final var runtimeWiring = RuntimeWiring.newRuntimeWiring()
-                .type("Query", builder -> builder.dataFetchers(queryDataFetchers))
-                .type("Mutation", builder -> builder.dataFetchers(mutationDataFetchers))
-                .type("Subscription", builder -> builder.dataFetchers(subscriptionDataFetchers))
+                .type(GraphQlConstants.TYPE_QUERY, builder -> builder.dataFetchers(queryDataFetchers))
+                .type(GraphQlConstants.TYPE_MUTATION, builder -> builder.dataFetchers(mutationDataFetchers))
+                .type(GraphQlConstants.TYPE_SUBSCRIPTION, builder -> builder.dataFetchers(subscriptionDataFetchers))
                 .build();
 
         final var schemaGenerator = new SchemaGenerator();
