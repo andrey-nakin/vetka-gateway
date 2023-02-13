@@ -1,5 +1,6 @@
 package com.vetka.gateway.schema.service;
 
+import com.vetka.gateway.graphql.GraphQlSchemaMerger;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
 import com.vetka.gateway.persistence.api.IPersistenceServiceFacade;
 import com.vetka.gateway.schema.bo.GraphQlSchemaInfo;
@@ -14,9 +15,7 @@ import graphql.schema.GraphQLSchema;
 import graphql.schema.TypeResolver;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
-import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.SchemaPrinter;
-import graphql.schema.idl.TypeDefinitionRegistry;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
 import java.util.HashMap;
@@ -132,16 +131,14 @@ public class GraphQlSchemaRegistryService {
     }
 
     private GraphQLSchema buildSchema(final List<GraphQlEndpointInfo> endpoints) {
-        final var typeDefinitionRegistry = new TypeDefinitionRegistry();
+        final var typeDefinitionRegistry = GraphQlSchemaMerger.merge(
+                endpoints.stream().map(GraphQlEndpointInfo::getGraphQlEndpoint).map(GraphQlEndpoint::getSchema));
+
         final Map<String, DataFetcher> queryDataFetchers = new HashMap<>();
         final Map<String, DataFetcher> mutationDataFetchers = new HashMap<>();
         final Map<String, DataFetcher> subscriptionDataFetchers = new HashMap<>();
 
         for (final var ep : endpoints) {
-            final var schemaParser = new SchemaParser();
-            final var epTdr = schemaParser.parse(ep.getGraphQlEndpoint().getSchema());
-            typeDefinitionRegistry.merge(epTdr);
-
             final var dataFetcher = new GraphQlDataFetcher(transportService, ep);
             ep.getQueries().forEach(fieldName -> queryDataFetchers.put(fieldName, dataFetcher));
             ep.getMutations().forEach(fieldName -> mutationDataFetchers.put(fieldName, dataFetcher));
