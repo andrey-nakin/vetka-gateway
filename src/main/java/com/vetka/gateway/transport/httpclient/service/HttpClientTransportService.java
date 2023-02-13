@@ -1,5 +1,7 @@
 package com.vetka.gateway.transport.httpclient.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.vetka.gateway.endpoint.bo.WebGraphQlRequestWrapper;
 import com.vetka.gateway.objectmap.service.ObjectMapperHelper;
 import com.vetka.gateway.schema.bo.GraphQlEndpointInfo;
@@ -96,7 +98,9 @@ public class HttpClientTransportService implements ITransportService {
 
         try {
             return objectMapperHelper.getObjectMapper().readValue(httpResponse.body(), DefaultGraphQlResponse.class);
-        } catch (IOException ex) {
+        } catch (JsonMappingException ex) {
+            throw new RuntimeException(ex); //  TODO add proper handling
+        } catch (JsonProcessingException ex) {
             throw new RuntimeException(ex); //  TODO add proper handling
         }
     }
