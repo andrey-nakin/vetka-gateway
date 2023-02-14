@@ -48,10 +48,12 @@ public class GraphQlSchemaRegistryService {
     @Getter
     private volatile GraphQlSchemaInfo info;
 
-    public void reloadSchemas() {
-        final var endpoints = reloadAndParse();
-        this.info = new GraphQlSchemaInfo(buildSchema(endpoints), endpoints);
-        log.info("endpoints loaded: {}", endpoints.size());
+    public Mono<GraphQlSchemaInfo> reloadSchemas() {
+        return reloadAndParse().map(endpoints -> {
+            final var result = info = new GraphQlSchemaInfo(buildSchema(endpoints), endpoints);
+            log.info("endpoints loaded: {}", endpoints.size());
+            return result;
+        });
     }
 
     public Mono<String> validateNewSchema(@NonNull final String sdl) {
@@ -77,7 +79,7 @@ public class GraphQlSchemaRegistryService {
 
     @PostConstruct
     void init() {
-        reloadSchemas();
+        reloadSchemas().block();
     }
 
     private Mono<String> validate(@NonNull final Mono<List<String>> sdls, @NonNull final String sdlToCheck) {
@@ -95,10 +97,8 @@ public class GraphQlSchemaRegistryService {
         return persistenceServiceFacade.graphQlEndpointService().findAll().map(this::parse);
     }
 
-    private List<GraphQlEndpointInfo> reloadAndParse() {
-        final var result = loadAndParse().collectList().defaultIfEmpty(List.of()).block();
-        checkConflicts(result);
-        return result;
+    private Mono<List<GraphQlEndpointInfo>> reloadAndParse() {
+        return loadAndParse().collectList().defaultIfEmpty(List.of());
     }
 
     private GraphQlEndpointInfo parse(@NonNull final GraphQlEndpoint graphQlEndpoint) {
