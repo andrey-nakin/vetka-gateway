@@ -18,6 +18,7 @@ import com.vetka.gateway.schema.exception.BadSchemaException;
 import com.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
 import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
+import java.util.Map;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,11 +73,17 @@ public class UpdateGraphQlEndpointResolver {
     private Mono<GraphQlEndpointUpdateInput> validate(@NonNull final GraphQlEndpointUpdateInput input,
             @NonNull final DataFetchingEnvironment environment) {
 
-        if (StringUtils.isBlank(input.getName())) {
+        final Map<String, Object> inputMap = environment.getArgument("input");
+
+        if (inputMap.containsKey("name") && StringUtils.isBlank(input.getName())) {
             return Mono.error(new EndpointEmptyNameException());
         }
 
-        return graphQlSchemaRegistryService.validateExistingSchema(input.getId(), input.getSchema())
-                .map(validatedSchema -> input.toBuilder().schema(validatedSchema).build());
+        if (inputMap.containsKey("schema")) {
+            return graphQlSchemaRegistryService.validateExistingSchema(input.getId(), input.getSchema())
+                    .map(validatedSchema -> input.toBuilder().schema(validatedSchema).build());
+        }
+
+        return Mono.just(input);
     }
 }
