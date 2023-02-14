@@ -6,11 +6,9 @@ import com.vetka.gateway.persistence.api.IPersistenceServiceFacade;
 import com.vetka.gateway.schema.bo.GraphQlSchemaInfo;
 import com.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import com.vetka.gateway.schema.exception.BadSchemaException;
-import com.vetka.gateway.schema.exception.SchemaConflictException;
 import com.vetka.gateway.transport.api.ITransportService;
 import graphql.TypeResolutionEnvironment;
 import graphql.schema.DataFetcher;
-import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.TypeResolver;
@@ -18,17 +16,12 @@ import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaPrinter;
 import graphql.schema.idl.errors.SchemaProblem;
-import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -105,66 +98,9 @@ public class GraphQlSchemaRegistryService {
         log.info("parsing graphQlEndpoint={}", graphQlEndpoint);
 
         final var schema = SchemaGenerator.createdMockedSchema(graphQlEndpoint.getSchema());
-        final var result = GraphQlEndpointInfo.builder()
-                .graphQlEndpoint(graphQlEndpoint)
-                .schema(schema)
-                .queries(fieldNames(schema.getQueryType()))
-                .mutations(fieldNames(schema.getMutationType()))
-                .subscriptions(fieldNames(schema.getSubscriptionType()))
-                .build();
+        final var result = GraphQlEndpointInfo.builder().graphQlEndpoint(graphQlEndpoint).schema(schema).build();
         log.info("parsed {}", result);
         return result;
-    }
-
-    private static Set<String> fieldNames(@Nullable final GraphQLObjectType src) {
-        return Optional.ofNullable(src)
-                .map(t -> t.getFields().stream().map(GraphQLFieldDefinition::getName).collect(Collectors.toSet()))
-                .orElse(Set.of());
-    }
-
-    private void checkConflicts(@NonNull final List<GraphQlEndpointInfo> endpoints) {
-        final var sb = new StringBuilder();
-        var ok = true;
-
-        for (int i = 0; i < endpoints.size(); i++) {
-            final var a = endpoints.get(i);
-            for (int j = i + 1; j < endpoints.size(); j++) {
-                final var b = endpoints.get(j);
-
-                ok = ok && checkIntersections(sb, a, b, GraphQlEndpointInfo::getQueries, "queries");
-                ok = ok && checkIntersections(sb, a, b, GraphQlEndpointInfo::getMutations, "mutations");
-                ok = ok && checkIntersections(sb, a, b, GraphQlEndpointInfo::getSubscriptions, "subscriptions");
-            }
-        }
-
-        if (!ok) {
-            throw new SchemaConflictException(sb.toString());
-        }
-    }
-
-    private static boolean checkIntersections(@NonNull final StringBuilder sb, @NonNull final GraphQlEndpointInfo a,
-            @NonNull final GraphQlEndpointInfo b, @NonNull final Function<GraphQlEndpointInfo, Set<String>> getter,
-            @NonNull final String typeName) {
-
-        final var intersections = intersection(getter.apply(a), getter.apply(b));
-        if (!intersections.isEmpty()) {
-            sb.append("There are conflicting ")
-                    .append(typeName)
-                    .append(" in endpoints ")
-                    .append(a.getGraphQlEndpoint().getName())
-                    .append(" and ")
-                    .append(b.getGraphQlEndpoint().getName())
-                    .append(": ")
-                    .append(intersections)
-                    .append(".\n");
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static <T> Set<T> intersection(@NonNull final Set<T> a, @NonNull final Set<T> b) {
-        return a.stream().filter(b::contains).collect(Collectors.toSet());
     }
 
     private GraphQLSchema buildSchema(final List<GraphQlEndpointInfo> endpoints) {
@@ -181,9 +117,9 @@ public class GraphQlSchemaRegistryService {
 
         for (final var ep : endpoints) {
             final var dataFetcher = new GraphQlDataFetcher(transportService, ep);
-            ep.getQueries().forEach(fieldName -> queryDataFetchers.put(fieldName, dataFetcher));
-            ep.getMutations().forEach(fieldName -> mutationDataFetchers.put(fieldName, dataFetcher));
-            ep.getSubscriptions().forEach(fieldName -> subscriptionDataFetchers.put(fieldName, dataFetcher));
+            addFetchers(ep.getSchema().getQueryType(), queryDataFetchers, dataFetcher);
+            addFetchers(ep.getSchema().getMutationType(), mutationDataFetchers, dataFetcher);
+            addFetchers(ep.getSchema().getSubscriptionType(), subscriptionDataFetchers, dataFetcher);
         }
 
         TypeResolver t = new TypeResolver() {
@@ -209,5 +145,13 @@ public class GraphQlSchemaRegistryService {
         final var result = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
         log.debug("Superschema\n{}", new SchemaPrinter().print(result));
         return result;
+    }
+
+    private static void addFetchers(final GraphQLObjectType src, final Map<String, DataFetcher> dest,
+            final DataFetcher<?> dataFetcher) {
+
+        if (src != null) {
+            src.getFields().forEach(fd -> dest.put(fd.getName(), dataFetcher));
+        }
     }
 }
