@@ -1,5 +1,6 @@
 package com.vetka.gateway.mgmt.graphqlendpoint.resolver;
 
+import com.vetka.gateway.mgmt.common.mapper.GraphQLErrorMapper;
 import com.vetka.gateway.mgmt.endpoint.model.EndpointErrorDuplicatingName;
 import com.vetka.gateway.mgmt.endpoint.model.EndpointErrorEmptyName;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationError;
@@ -30,6 +31,7 @@ public class CreateGraphQlEndpointResolver {
 
     private final IPersistenceServiceFacade persistenceServiceFacade;
     private final GraphQlSchemaRegistryService graphQlSchemaRegistryService;
+    private final GraphQLErrorMapper graphQLErrorMapper;
 
     @MutationMapping
     public Mono<GraphQlEndpointCreationPayload> createGraphQlEndpoint(
@@ -37,9 +39,8 @@ public class CreateGraphQlEndpointResolver {
 
         log.info("createGraphQlEndpoint input={}", input);
 
-        return graphQlSchemaRegistryService.validateNewSchema(input.getSchema())
-                .doOnSuccess(unused -> this.validate(input))
-                .flatMap(unused -> persistenceServiceFacade.graphQlEndpointService().create(input))
+        return validate(input).flatMap(
+                        validatedInput -> persistenceServiceFacade.graphQlEndpointService().create(validatedInput))
                 .doOnSuccess(unused -> graphQlSchemaRegistryService.reloadSchemas())
                 .map(e -> (GraphQlEndpointCreationPayload) GraphQlEndpointCreationResponse.builder()
                         .graphQlEndpoint(e)
@@ -47,6 +48,7 @@ public class CreateGraphQlEndpointResolver {
                 .onErrorResume(BadSchemaException.class, ex -> error(GraphQlEndpointErrorBadSchema.builder()
                         .message("Schema is incorrect")
                         .schema(ex.getSchema())
+                        .errors(graphQLErrorMapper.toModels(ex.getErrors()))
                         .build()))
                 .onErrorResume(EndpointEmptyNameException.class,
                         ex -> error(EndpointErrorEmptyName.builder().message("Empty endpoint name").build()))
@@ -61,9 +63,12 @@ public class CreateGraphQlEndpointResolver {
         return Mono.just(GraphQlEndpointCreationErrors.builder().errors(List.of(error)).build());
     }
 
-    private void validate(@NonNull final GraphQlEndpointCreationInput input) {
+    private Mono<GraphQlEndpointCreationInput> validate(@NonNull final GraphQlEndpointCreationInput input) {
         if (StringUtils.isBlank(input.getName())) {
-            throw new EndpointEmptyNameException();
+            return Mono.error(new EndpointEmptyNameException());
         }
+
+        return graphQlSchemaRegistryService.validateNewSchema(input.getSchema())
+                .map(validatedSchema -> input.toBuilder().schema(validatedSchema).build());
     }
 }

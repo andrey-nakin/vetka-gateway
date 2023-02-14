@@ -45,7 +45,7 @@ public class UpdateGraphQlEndpointResolver {
         log.info("updateGraphQlEndpoint input={}", input);
 
         return validate(input, environment).flatMap(
-                        inp -> persistenceServiceFacade.graphQlEndpointService().update(inp))
+                        validatedInput -> persistenceServiceFacade.graphQlEndpointService().update(validatedInput))
                 .doOnSuccess(unused -> graphQlSchemaRegistryService.reloadSchemas())
                 .map(e -> (GraphQlEndpointUpdatePayload) GraphQlEndpointUpdateResponse.builder()
                         .graphQlEndpoint(e)

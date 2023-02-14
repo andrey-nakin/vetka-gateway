@@ -6,7 +6,7 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 
 @Getter
-@Builder
+@Builder(toBuilder = true)
 public class GraphQlEndpointCreationInput {
 
     @NonNull
