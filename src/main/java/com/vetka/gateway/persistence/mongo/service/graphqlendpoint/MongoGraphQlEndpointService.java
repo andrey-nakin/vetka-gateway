@@ -2,11 +2,13 @@ package com.vetka.gateway.persistence.mongo.service.graphqlendpoint;
 
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationInput;
+import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateInput;
 import com.vetka.gateway.persistence.api.exception.endpoint.EndpointDuplicatingNameException;
 import com.vetka.gateway.persistence.api.exception.endpoint.EndpointNotFoundException;
 import com.vetka.gateway.persistence.api.graphqlendpoint.IGraphQlEndpointService;
 import com.vetka.gateway.persistence.mongo.mapping.graphqlendpoint.GraphQlEndpointSerializer;
 import com.vetka.gateway.persistence.mongo.repository.graphqlendpoint.GraphQlEndpointRepository;
+import java.util.Objects;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,8 +35,16 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
     public Mono<GraphQlEndpoint> create(@NonNull final GraphQlEndpointCreationInput input) {
         log.info("create input={}", input);
 
-        return checkName(input.getName()).flatMap(
+        return checkName(input.getName(), null).flatMap(
                 unused -> repository.insert(serializer.toDocument(input)).map(serializer::toModel));
+    }
+
+    @Override
+    public Mono<GraphQlEndpoint> update(@NonNull final GraphQlEndpointUpdateInput input) {
+        log.info("update input={}", input);
+
+        return checkName(input.getName(), input.getId()).flatMap(
+                unused -> repository.save(serializer.toDocument(input)).map(serializer::toModel));
     }
 
     @Override
@@ -46,12 +56,12 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
                 .flatMap(e -> repository.deleteById(id));
     }
 
-    private Mono<String> checkName(final String name) {
+    private Mono<String> checkName(final String name, final String id) {
         return name == null ? Mono.empty() : repository.findAllByName(name).collectList().flatMap(l -> {
-            if (l.isEmpty()) {
-                return Mono.just(name);
-            } else {
+            if (l.stream().anyMatch(e -> !Objects.equals(e.getId(), id))) {
                 return Mono.error(new EndpointDuplicatingNameException(name));
+            } else {
+                return Mono.just(name);
             }
         });
     }

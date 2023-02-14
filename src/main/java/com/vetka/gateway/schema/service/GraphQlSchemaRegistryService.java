@@ -5,6 +5,7 @@ import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
 import com.vetka.gateway.persistence.api.IPersistenceServiceFacade;
 import com.vetka.gateway.schema.bo.GraphQlSchemaInfo;
 import com.vetka.gateway.schema.bo.GraphQlEndpointInfo;
+import com.vetka.gateway.schema.exception.BadSchemaException;
 import com.vetka.gateway.schema.exception.SchemaConflictException;
 import com.vetka.gateway.transport.api.ITransportService;
 import graphql.TypeResolutionEnvironment;
@@ -16,11 +17,14 @@ import graphql.schema.TypeResolver;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaPrinter;
+import graphql.schema.idl.errors.SchemaProblem;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -30,6 +34,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
@@ -48,18 +54,49 @@ public class GraphQlSchemaRegistryService {
         log.info("endpoints loaded: {}", endpoints.size());
     }
 
+    public Mono<String> validateNewSchema(@NonNull final String sdl) {
+        return validate(loadAndParse().map(ep -> ep.getGraphQlEndpoint().getSchema()).collectList().map(c -> {
+            final var result = new ArrayList<>(c);
+            result.add(sdl);
+            return result;
+        }), sdl);
+    }
+
+    public Mono<String> validateExistingSchema(@NonNull final String endpointId, @NonNull final String newSdl) {
+        return validate(loadAndParse().map(ep -> {
+            if (Objects.equals(endpointId, ep.getGraphQlEndpoint().getId())) {
+                // substitute the schema in existing endpoint
+                return ep.toBuilder()
+                        .graphQlEndpoint(ep.getGraphQlEndpoint().toBuilder().schema(newSdl).build())
+                        .build();
+            } else {
+                return ep;
+            }
+        }).map(ep -> ep.getGraphQlEndpoint().getSchema()).collectList(), newSdl);
+    }
+
     @PostConstruct
     void init() {
         reloadSchemas();
     }
 
+    private Mono<String> validate(@NonNull final Mono<List<String>> sdls, @NonNull final String sdlToCheck) {
+        return sdls.flatMap(sdlList -> {
+            try {
+                GraphQlSchemaMerger.merge(sdlList.stream());
+                return Mono.just(sdlToCheck);
+            } catch (SchemaProblem ex) {
+                return Mono.error(new BadSchemaException(ex.getMessage(), ex, sdlToCheck, ex.getErrors()));
+            }
+        });
+    }
+
+    private Flux<GraphQlEndpointInfo> loadAndParse() {
+        return persistenceServiceFacade.graphQlEndpointService().findAll().map(this::parse);
+    }
+
     private List<GraphQlEndpointInfo> reloadAndParse() {
-        final var result = persistenceServiceFacade.graphQlEndpointService()
-                .findAll()
-                .map(this::parse)
-                .collectList()
-                .defaultIfEmpty(List.of())
-                .block();
+        final var result = loadAndParse().collectList().defaultIfEmpty(List.of()).block();
         checkConflicts(result);
         return result;
     }

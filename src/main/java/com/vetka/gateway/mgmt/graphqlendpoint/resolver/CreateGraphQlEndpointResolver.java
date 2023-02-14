@@ -12,7 +12,6 @@ import com.vetka.gateway.persistence.api.exception.endpoint.EndpointDuplicatingN
 import com.vetka.gateway.persistence.api.exception.endpoint.EndpointEmptyNameException;
 import com.vetka.gateway.schema.exception.BadSchemaException;
 import com.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
-import com.vetka.gateway.schema.service.SchemaValidationService;
 import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +29,6 @@ public class CreateGraphQlEndpointResolver {
 
     private final IPersistenceServiceFacade persistenceServiceFacade;
     private final GraphQlSchemaRegistryService graphQlSchemaRegistryService;
-    private final SchemaValidationService schemaValidationService;
 
     @MutationMapping
     public Mono<GraphQlEndpointCreationPayload> createGraphQlEndpoint(
@@ -38,7 +36,7 @@ public class CreateGraphQlEndpointResolver {
 
         log.info("createGraphQlEndpoint input={}", input);
 
-        return schemaValidationService.validate(input.getSchema())
+        return graphQlSchemaRegistryService.validateNewSchema(input.getSchema())
                 .doOnSuccess(unused -> this.validate(input))
                 .flatMap(unused -> persistenceServiceFacade.graphQlEndpointService().create(input))
                 .doOnSuccess(unused -> graphQlSchemaRegistryService.reloadSchemas())

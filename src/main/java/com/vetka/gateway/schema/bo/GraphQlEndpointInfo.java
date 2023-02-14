@@ -11,7 +11,7 @@ import lombok.Getter;
 import lombok.NonNull;
 
 @Getter
-@Builder
+@Builder(toBuilder = true)
 public class GraphQlEndpointInfo {
 
     @NonNull
