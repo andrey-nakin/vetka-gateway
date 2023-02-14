@@ -84,7 +84,7 @@ public class HttpClientTransportService implements ITransportService {
             final GraphQlEndpointInfo graphQlEndpointInfo) {
 
         if (log.isDebugEnabled()) {
-            log.debug("sending request to {}", graphQlEndpointInfo.getGraphQlEndpoint().getAddress());
+            log.debug("Sending request to {}", graphQlEndpointInfo.getGraphQlEndpoint().getAddress());
         }
 
         final var request = HttpRequest.newBuilder()
@@ -105,6 +105,10 @@ public class HttpClientTransportService implements ITransportService {
 
     private GraphQlResponse parseGraphQlResponse(final HttpResponse<String> httpResponse,
             final GraphQlEndpointInfo graphQlEndpointInfo) {
+
+        if (log.isDebugEnabled()) {
+            log.debug("Reading response from {}", graphQlEndpointInfo.getGraphQlEndpoint().getAddress());
+        }
 
         if (httpResponse.statusCode() != HttpStatus.OK.value()) {
             throw new GraphQlHttpErrorException(httpResponse.statusCode(), graphQlEndpointInfo);

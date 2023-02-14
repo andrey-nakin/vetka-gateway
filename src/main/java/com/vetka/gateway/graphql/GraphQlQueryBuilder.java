@@ -34,7 +34,7 @@ public class GraphQlQueryBuilder {
             }
 
             sb.append(" {\\n");
-            key.getSelectionSet().getFields().forEach(selField -> addField(sb, selField));
+            key.getSelectionSet().getImmediateFields().forEach(selField -> addField(sb, selField));
             sb.append("}\\n");
         });
         sb.append("}\\n");
@@ -53,11 +53,10 @@ public class GraphQlQueryBuilder {
             // TODO
         }
 
-        if (field.getSelectionSet() != null && field.getSelectionSet().getFields() != null && !field.getSelectionSet()
-                .getFields()
-                .isEmpty()) {
+        if (field.getSelectionSet() != null && field.getSelectionSet()
+                .getImmediateFields() != null && !field.getSelectionSet().getImmediateFields().isEmpty()) {
             sb.append(" {\\n");
-            field.getSelectionSet().getFields().forEach(subField -> addField(sb, subField));
+            field.getSelectionSet().getImmediateFields().forEach(subField -> addField(sb, subField));
             sb.append("}\\n");
         }
 
