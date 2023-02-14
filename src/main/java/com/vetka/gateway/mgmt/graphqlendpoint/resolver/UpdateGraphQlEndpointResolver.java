@@ -44,8 +44,8 @@ public class UpdateGraphQlEndpointResolver {
 
         log.info("updateGraphQlEndpoint input={}", input);
 
-        return validate(input, environment).flatMap(
-                        validatedInput -> persistenceServiceFacade.graphQlEndpointService().update(validatedInput))
+        return validate(input, environment).flatMap(validatedInput -> persistenceServiceFacade.graphQlEndpointService()
+                        .update(validatedInput, inputFields(environment).keySet()))
                 .doOnSuccess(unused -> graphQlSchemaRegistryService.reloadSchemas())
                 .map(e -> (GraphQlEndpointUpdatePayload) GraphQlEndpointUpdateResponse.builder()
                         .graphQlEndpoint(e)
@@ -73,7 +73,7 @@ public class UpdateGraphQlEndpointResolver {
     private Mono<GraphQlEndpointUpdateInput> validate(@NonNull final GraphQlEndpointUpdateInput input,
             @NonNull final DataFetchingEnvironment environment) {
 
-        final Map<String, Object> inputMap = environment.getArgument("input");
+        final Map<String, Object> inputMap = inputFields(environment);
 
         if (inputMap.containsKey("name") && StringUtils.isBlank(input.getName())) {
             return Mono.error(new EndpointEmptyNameException());
@@ -85,5 +85,9 @@ public class UpdateGraphQlEndpointResolver {
         }
 
         return Mono.just(input);
+    }
+
+    private static Map<String, Object> inputFields(@NonNull final DataFetchingEnvironment environment) {
+        return environment.getArgument("input");
     }
 }

@@ -9,6 +9,7 @@ import com.vetka.gateway.persistence.api.graphqlendpoint.IGraphQlEndpointService
 import com.vetka.gateway.persistence.mongo.mapping.graphqlendpoint.GraphQlEndpointSerializer;
 import com.vetka.gateway.persistence.mongo.repository.graphqlendpoint.GraphQlEndpointRepository;
 import java.util.Objects;
+import java.util.Set;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,11 +41,12 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
     }
 
     @Override
-    public Mono<GraphQlEndpoint> update(@NonNull final GraphQlEndpointUpdateInput input) {
+    public Mono<GraphQlEndpoint> update(@NonNull final GraphQlEndpointUpdateInput input,
+            @NonNull final Set<String> updatableFields) {
         log.info("update input={}", input);
 
         return checkName(input.getName(), input.getId()).flatMap(
-                unused -> repository.save(serializer.toDocument(input)).map(serializer::toModel));
+                unused -> repository.save(serializer.toDocument(input, updatableFields)).map(serializer::toModel));
     }
 
     @Override
