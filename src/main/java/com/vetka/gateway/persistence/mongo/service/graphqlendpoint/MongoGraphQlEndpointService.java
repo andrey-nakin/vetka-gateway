@@ -1,15 +1,13 @@
 package com.vetka.gateway.persistence.mongo.service.graphqlendpoint;
 
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
-import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationInput;
-import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateInput;
 import com.vetka.gateway.persistence.api.exception.endpoint.EndpointDuplicatingNameException;
 import com.vetka.gateway.persistence.api.exception.endpoint.EndpointNotFoundException;
 import com.vetka.gateway.persistence.api.graphqlendpoint.IGraphQlEndpointService;
 import com.vetka.gateway.persistence.mongo.mapping.graphqlendpoint.GraphQlEndpointSerializer;
 import com.vetka.gateway.persistence.mongo.repository.graphqlendpoint.GraphQlEndpointRepository;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,20 +31,21 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
     }
 
     @Override
-    public Mono<GraphQlEndpoint> create(@NonNull final GraphQlEndpointCreationInput input) {
+    public Mono<GraphQlEndpoint> create(@NonNull final Map<String, Object> input) {
         log.info("create input={}", input);
 
-        return checkName(input.getName(), null).flatMap(
+        return checkName((String) input.get("name"), null).flatMap(
                 unused -> repository.insert(serializer.toDocument(input)).map(serializer::toModel));
     }
 
     @Override
-    public Mono<GraphQlEndpoint> update(@NonNull final GraphQlEndpointUpdateInput input,
-            @NonNull final Set<String> updatableFields) {
+    public Mono<GraphQlEndpoint> update(@NonNull final Map<String, Object> input) {
         log.info("update input={}", input);
 
-        return checkName(input.getName(), input.getId()).flatMap(
-                unused -> repository.save(serializer.toDocument(input, updatableFields)).map(serializer::toModel));
+        final var id = (String) input.get("id");
+        return checkName((String) input.get("name"), id).flatMap(unused -> repository.findById(id))
+                .flatMap(existing -> repository.save(serializer.toDocument(existing, input)))
+                .map(serializer::toModel);
     }
 
     @Override

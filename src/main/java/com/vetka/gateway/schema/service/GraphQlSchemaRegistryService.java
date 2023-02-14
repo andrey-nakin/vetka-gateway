@@ -168,6 +168,10 @@ public class GraphQlSchemaRegistryService {
     }
 
     private GraphQLSchema buildSchema(final List<GraphQlEndpointInfo> endpoints) {
+        if (endpoints.isEmpty()) {
+            return null;
+        }
+
         final var typeDefinitionRegistry = GraphQlSchemaMerger.merge(
                 endpoints.stream().map(GraphQlEndpointInfo::getGraphQlEndpoint).map(GraphQlEndpoint::getSchema));
 

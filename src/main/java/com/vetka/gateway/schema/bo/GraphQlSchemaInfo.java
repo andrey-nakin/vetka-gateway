@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public class GraphQlSchemaInfo {
 
-    @NonNull
     private final GraphQLSchema schema;
 
     @NonNull

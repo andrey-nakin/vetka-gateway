@@ -1,52 +1,32 @@
 package com.vetka.gateway.persistence.mongo.mapping.graphqlendpoint;
 
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
-import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationInput;
-import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateInput;
 import com.vetka.gateway.persistence.mongo.document.graphqlendpoint.GraphQlEndpointDocument;
-import java.util.Set;
+import java.util.Map;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.context.annotation.Lazy;
 
-@Mapper
+@Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Lazy
 public abstract class GraphQlEndpointSerializer {
 
     public abstract GraphQlEndpoint toModel(GraphQlEndpointDocument src);
 
     @Mapping(target = "id", ignore = true)
-    public abstract GraphQlEndpointDocument toDocument(GraphQlEndpointCreationInput src);
+    public abstract GraphQlEndpointDocument toDocument(Map<String, Object> src);
 
-    public GraphQlEndpointDocument toDocument(final GraphQlEndpointUpdateInput src, final Set<String> updatableFields) {
-        if (src == null) {
-            return null;
-        }
+    @Mapping(target = "id", ignore = true)
+    public abstract GraphQlEndpointDocument toDocument(@MappingTarget GraphQlEndpointDocument target,
+            Map<String, Object> src);
 
-        GraphQlEndpointDocument graphQlEndpointDocument = new GraphQlEndpointDocument();
+    public static String mapString(Object value) {
+        return value == null ? null : (String) value;
+    }
 
-        if (updatableFields.contains("id")) {
-            graphQlEndpointDocument.setId(src.getId());
-        }
-        if (updatableFields.contains("name")) {
-            graphQlEndpointDocument.setName(src.getName());
-        }
-        if (updatableFields.contains("address")) {
-            graphQlEndpointDocument.setAddress(src.getAddress());
-        }
-        if (updatableFields.contains("schema")) {
-            graphQlEndpointDocument.setSchema(src.getSchema());
-        }
-        if (updatableFields.contains("httpVersion")) {
-            graphQlEndpointDocument.setHttpVersion(src.getHttpVersion());
-        }
-        if (updatableFields.contains("connectTimeout")) {
-            graphQlEndpointDocument.setConnectTimeout(src.getConnectTimeout());
-        }
-        if (updatableFields.contains("readTimeout")) {
-            graphQlEndpointDocument.setReadTimeout(src.getReadTimeout());
-        }
-
-        return graphQlEndpointDocument;
+    public static Integer mapInteger(Object value) {
+        return value == null ? null : (Integer) value;
     }
 }

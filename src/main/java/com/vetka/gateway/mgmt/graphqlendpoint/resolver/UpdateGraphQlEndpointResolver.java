@@ -7,7 +7,6 @@ import com.vetka.gateway.mgmt.endpoint.model.EndpointErrorUnknownId;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointErrorBadSchema;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateError;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateErrors;
-import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateInput;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdatePayload;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateResponse;
 import com.vetka.gateway.persistence.api.IPersistenceServiceFacade;
@@ -17,13 +16,13 @@ import com.vetka.gateway.persistence.api.exception.endpoint.EndpointNotFoundExce
 import com.vetka.gateway.schema.exception.BadSchemaException;
 import com.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
 import graphql.schema.DataFetchingEnvironment;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Mono;
@@ -39,13 +38,12 @@ public class UpdateGraphQlEndpointResolver {
 
     @MutationMapping
     public Mono<GraphQlEndpointUpdatePayload> updateGraphQlEndpoint(
-            @NonNull @Argument final GraphQlEndpointUpdateInput input,
             @NonNull final DataFetchingEnvironment environment) {
 
-        log.info("updateGraphQlEndpoint input={}", input);
+        log.info("updateGraphQlEndpoint");
 
-        return validate(input, environment).flatMap(validatedInput -> persistenceServiceFacade.graphQlEndpointService()
-                        .update(validatedInput, inputFields(environment).keySet()))
+        return validate(environment).flatMap(
+                        validatedInput -> persistenceServiceFacade.graphQlEndpointService().update(validatedInput))
                 .doOnSuccess(unused -> graphQlSchemaRegistryService.reloadSchemas())
                 .map(e -> (GraphQlEndpointUpdatePayload) GraphQlEndpointUpdateResponse.builder()
                         .graphQlEndpoint(e)
@@ -70,24 +68,22 @@ public class UpdateGraphQlEndpointResolver {
         return Mono.just(GraphQlEndpointUpdateErrors.builder().errors(List.of(error)).build());
     }
 
-    private Mono<GraphQlEndpointUpdateInput> validate(@NonNull final GraphQlEndpointUpdateInput input,
-            @NonNull final DataFetchingEnvironment environment) {
+    private Mono<Map<String, Object>> validate(@NonNull final DataFetchingEnvironment environment) {
+        final Map<String, Object> input = environment.getArgument("input");
 
-        final Map<String, Object> inputMap = inputFields(environment);
-
-        if (inputMap.containsKey("name") && StringUtils.isBlank(input.getName())) {
+        if (input.containsKey("name") && StringUtils.isBlank((String) input.get("name"))) {
             return Mono.error(new EndpointEmptyNameException());
         }
 
-        if (inputMap.containsKey("schema")) {
-            return graphQlSchemaRegistryService.validateExistingSchema(input.getId(), input.getSchema())
-                    .map(validatedSchema -> input.toBuilder().schema(validatedSchema).build());
+        if (input.containsKey("schema")) {
+            return graphQlSchemaRegistryService.validateExistingSchema((String) input.get("id"),
+                    (String) input.get("schema")).map(validatedSchema -> {
+                final var result = new HashMap<>(input);
+                result.put("schema", validatedSchema);
+                return result;
+            });
         }
 
         return Mono.just(input);
-    }
-
-    private static Map<String, Object> inputFields(@NonNull final DataFetchingEnvironment environment) {
-        return environment.getArgument("input");
     }
 }
