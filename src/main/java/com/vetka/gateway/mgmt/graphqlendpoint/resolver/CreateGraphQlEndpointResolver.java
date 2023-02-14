@@ -2,6 +2,7 @@ package com.vetka.gateway.mgmt.graphqlendpoint.resolver;
 
 import com.vetka.gateway.mgmt.endpoint.model.EndpointErrorDuplicatingName;
 import com.vetka.gateway.mgmt.endpoint.model.EndpointErrorEmptyName;
+import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationError;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationErrors;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationInput;
 import com.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationPayload;
@@ -43,22 +44,21 @@ public class CreateGraphQlEndpointResolver {
                 .map(e -> (GraphQlEndpointCreationPayload) GraphQlEndpointCreationResponse.builder()
                         .graphQlEndpoint(e)
                         .build())
-                .onErrorResume(BadSchemaException.class, ex -> Mono.just(GraphQlEndpointCreationErrors.builder()
-                        .errors(List.of(GraphQlEndpointErrorBadSchema.builder()
-                                .message("Schema is incorrect")
-                                .schema(ex.getSchema())
-                                .build()))
+                .onErrorResume(BadSchemaException.class, ex -> error(GraphQlEndpointErrorBadSchema.builder()
+                        .message("Schema is incorrect")
+                        .schema(ex.getSchema())
                         .build()))
-                .onErrorResume(EndpointEmptyNameException.class, ex -> Mono.just(GraphQlEndpointCreationErrors.builder()
-                        .errors(List.of(EndpointErrorEmptyName.builder().message("Empty endpoint name").build()))
-                        .build()))
-                .onErrorResume(EndpointDuplicatingNameException.class, ex -> Mono.just(
-                        GraphQlEndpointCreationErrors.builder()
-                                .errors(List.of(EndpointErrorDuplicatingName.builder()
-                                        .message("There is already an endpoint with the given name")
-                                        .name(ex.getName())
-                                        .build()))
+                .onErrorResume(EndpointEmptyNameException.class,
+                        ex -> error(EndpointErrorEmptyName.builder().message("Empty endpoint name").build()))
+                .onErrorResume(EndpointDuplicatingNameException.class, ex -> error(
+                        EndpointErrorDuplicatingName.builder()
+                                .message("There is already an endpoint with the given name")
+                                .name(ex.getName())
                                 .build()));
+    }
+
+    private static Mono<GraphQlEndpointCreationPayload> error(final GraphQlEndpointCreationError error) {
+        return Mono.just(GraphQlEndpointCreationErrors.builder().errors(List.of(error)).build());
     }
 
     private void validate(@NonNull final GraphQlEndpointCreationInput input) {
