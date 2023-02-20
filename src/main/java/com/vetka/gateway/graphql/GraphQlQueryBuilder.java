@@ -42,6 +42,7 @@ public class GraphQlQueryBuilder {
             addArguments(sb, field.getArguments());
 
             sb.append(" {\\n");
+            sb.append("__typename\\n"); //  TODO only add if __typename is not explicitly requested
             key.getSelectionSet().getImmediateFields().forEach(selField -> addField(sb, selField));
             sb.append("}\\n");
         });
@@ -52,21 +53,24 @@ public class GraphQlQueryBuilder {
     }
 
     private static void addField(final StringBuilder sb, final SelectedField field) {
-        if (StringUtils.isNotBlank(field.getAlias())) {
-            sb.append(field.getAlias()).append(": ");
+        for (var otn : field.getObjectTypeNames()) {
+            sb.append("...on ").append(otn).append(" {\\n");
+
+            if (StringUtils.isNotBlank(field.getAlias())) {
+                sb.append(field.getAlias()).append(": ");
+            }
+            sb.append(field.getName());
+
+            addArguments(sb, field.getArguments());
+
+            if (field.getSelectionSet() != null && field.getSelectionSet().getImmediateFields() != null && !field.getSelectionSet().getImmediateFields().isEmpty()) {
+                sb.append(" {\\n");
+                field.getSelectionSet().getImmediateFields().forEach(subField -> addField(sb, subField));
+                sb.append("}\\n");
+            }
+
+            sb.append("\\n}\\n");
         }
-        sb.append(field.getName());
-
-        addArguments(sb, field.getArguments());
-
-        if (field.getSelectionSet() != null && field.getSelectionSet()
-                .getImmediateFields() != null && !field.getSelectionSet().getImmediateFields().isEmpty()) {
-            sb.append(" {\\n");
-            field.getSelectionSet().getImmediateFields().forEach(subField -> addField(sb, subField));
-            sb.append("}\\n");
-        }
-
-        sb.append("\\n");
     }
 
     private static void addArguments(final StringBuilder sb, final List<Argument> arguments) {
@@ -97,7 +101,7 @@ public class GraphQlQueryBuilder {
         if (value == null) {
             sb.append("null");
         } else if (value instanceof String strVal) {
-            sb.append('"').append(prepareString(strVal)).append('"');
+            sb.append("\\\"").append(prepareString(strVal)).append("\\\"");
         } else if (value instanceof Number || value instanceof Boolean) {
             sb.append(value);
         } else if (value instanceof Collection<?> coll) {
@@ -114,7 +118,7 @@ public class GraphQlQueryBuilder {
             });
             sb.append("}\\n");
         } else if (value instanceof StringValue stringValue) {
-            sb.append('"').append(prepareString(stringValue.getValue())).append('"');
+            sb.append("\\\"").append(prepareString(stringValue.getValue())).append("\\\"");
         } else if (value instanceof IntValue intVal) {
             sb.append(intVal.getValue());
         } else if (value instanceof FloatValue floatVal) {

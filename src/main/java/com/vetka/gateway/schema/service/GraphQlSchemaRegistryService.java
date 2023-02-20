@@ -139,6 +139,9 @@ public class GraphQlSchemaRegistryService {
                 .type(GraphQlConstants.TYPE_MUTATION, builder -> builder.dataFetchers(mutationDataFetchers))
                 .type(GraphQlConstants.TYPE_SUBSCRIPTION, builder -> builder.dataFetchers(subscriptionDataFetchers))
                 .type("Node", typeWriting -> typeWriting.typeResolver(t))
+                .type("Payload", typeWriting -> typeWriting.typeResolver(t))
+                .type("Error", typeWriting -> typeWriting.typeResolver(t))
+                .type("MutationError", typeWriting -> typeWriting.typeResolver(t))
                 .build();
 
         final var schemaGenerator = new SchemaGenerator();
