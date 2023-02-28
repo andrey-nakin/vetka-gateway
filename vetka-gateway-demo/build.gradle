@@ -4,10 +4,6 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.0'
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation project(':vetka-gateway-core')
     implementation project(':vetka-gateway-persistence-mongo')
