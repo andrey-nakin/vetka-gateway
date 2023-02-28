@@ -5,6 +5,14 @@ Simple GraphQL router written in Java and WebFlux framework.
 * Has modularized architecture.
 * Has its own GraphQL API for management purposes.
 
+## Modules
+
+* `vetka-gateway-core` - base gateway logic.
+* `vetka-gateway-persistence-mongo` - implementation of the persistence layer that uses MongoDB as a storage engine.
+* `vetka-gateway-transport-httpclient` - implementation of the transport layer that uses Java `HttpClient`.
+* `vetka-gateway-demo` - application demonstrating the packaging of the Vetka Gateway libraries in a single executable
+  application.
+
 ## Configuration
 
 By default Vetka Gateway listens to management requests on `/graphql` address.
