@@ -1,0 +1,6 @@
+vetka-gateway-demo/build
+vetka-gateway-core/build
+vetka-gateway-persistence-mongo/build
+vetka-gateway-transport-httpclient/build
+
+mongo-volume
