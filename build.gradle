@@ -16,4 +16,8 @@ subprojects {
                 << '-Xlint:deprecation'
                 << '-Xlint:unchecked'
     }
+
+    test {
+        useJUnitPlatform()
+    }
 }
