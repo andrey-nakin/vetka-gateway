@@ -1,10 +1,10 @@
 package io.vetka.gateway.schema.service;
 
-import graphql.TypeResolutionEnvironment;
 import graphql.schema.DataFetcher;
+import graphql.schema.GraphQLInterfaceType;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
-import graphql.schema.TypeResolver;
+import graphql.schema.GraphQLUnionType;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaPrinter;
@@ -19,9 +19,11 @@ import io.vetka.gateway.transport.api.ITransportService;
 import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -114,38 +116,31 @@ public class GraphQlSchemaRegistryService {
         final Map<String, DataFetcher> queryDataFetchers = new HashMap<>();
         final Map<String, DataFetcher> mutationDataFetchers = new HashMap<>();
         final Map<String, DataFetcher> subscriptionDataFetchers = new HashMap<>();
+        final Set<String> polymorphicTypes = new HashSet<>();
 
         for (final var ep : endpoints) {
             final var dataFetcher = new GraphQlDataFetcher(transportService, ep);
             addFetchers(ep.getSchema().getQueryType(), queryDataFetchers, dataFetcher);
             addFetchers(ep.getSchema().getMutationType(), mutationDataFetchers, dataFetcher);
             addFetchers(ep.getSchema().getSubscriptionType(), subscriptionDataFetchers, dataFetcher);
-        }
-
-        TypeResolver t = new TypeResolver() {
-            @Override
-            public GraphQLObjectType getType(TypeResolutionEnvironment env) {
-                Object javaObject = env.getObject();
-                if (javaObject instanceof Map<?, ?>) {
-                    return env.getSchema().getObjectType((String) ((Map) javaObject).get("__typename"));
-                } else {
-                    throw new IllegalArgumentException("Unsupported java type: " + javaObject.getClass().getName());
+            ep.getSchema().getAllTypesAsList().forEach(nt -> {
+                if (nt instanceof GraphQLInterfaceType || nt instanceof GraphQLUnionType) {
+                    polymorphicTypes.add(nt.getName());
                 }
-            }
-        };
+            });
+        }
 
         final var runtimeWiring = RuntimeWiring.newRuntimeWiring()
                 .type(GraphQlConstants.TYPE_QUERY, builder -> builder.dataFetchers(queryDataFetchers))
                 .type(GraphQlConstants.TYPE_MUTATION, builder -> builder.dataFetchers(mutationDataFetchers))
-                .type(GraphQlConstants.TYPE_SUBSCRIPTION, builder -> builder.dataFetchers(subscriptionDataFetchers))
-                .type("Node", typeWriting -> typeWriting.typeResolver(t))
-                .type("Payload", typeWriting -> typeWriting.typeResolver(t))
-                .type("Error", typeWriting -> typeWriting.typeResolver(t))
-                .type("MutationError", typeWriting -> typeWriting.typeResolver(t))
-                .build();
+                .type(GraphQlConstants.TYPE_SUBSCRIPTION, builder -> builder.dataFetchers(subscriptionDataFetchers));
+
+        final var polymorphicTypeResolver = new GraphQlPolymorphicTypeResolver();
+        polymorphicTypes.forEach(
+                name -> runtimeWiring.type(name, typeWriting -> typeWriting.typeResolver(polymorphicTypeResolver)));
 
         final var schemaGenerator = new SchemaGenerator();
-        final var result = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
+        final var result = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring.build());
         log.debug("Superschema\n{}", new SchemaPrinter().print(result));
         return result;
     }
