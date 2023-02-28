@@ -1,4 +1,4 @@
-package io.vetka.gateway.persistence.api.graphqlendpoint;
+package io.vetka.gateway.persistence.api;
 
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
 import java.util.Map;

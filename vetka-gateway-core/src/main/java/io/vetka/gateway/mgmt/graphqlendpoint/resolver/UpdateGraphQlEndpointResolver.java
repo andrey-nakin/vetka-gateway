@@ -13,7 +13,7 @@ import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateResponse
 import io.vetka.gateway.persistence.api.exception.endpoint.EndpointDuplicatingNameException;
 import io.vetka.gateway.persistence.api.exception.endpoint.EndpointEmptyNameException;
 import io.vetka.gateway.persistence.api.exception.endpoint.EndpointNotFoundException;
-import io.vetka.gateway.persistence.api.graphqlendpoint.IGraphQlEndpointService;
+import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
 import io.vetka.gateway.schema.exception.BadSchemaException;
 import io.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
 import java.util.HashMap;

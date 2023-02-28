@@ -11,7 +11,7 @@ import graphql.schema.idl.SchemaPrinter;
 import graphql.schema.idl.errors.SchemaProblem;
 import io.vetka.gateway.graphql.GraphQlSchemaMerger;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
-import io.vetka.gateway.persistence.api.graphqlendpoint.IGraphQlEndpointService;
+import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
 import io.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import io.vetka.gateway.schema.bo.GraphQlSchemaInfo;
 import io.vetka.gateway.schema.exception.BadSchemaException;

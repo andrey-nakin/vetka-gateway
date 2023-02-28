@@ -1,7 +1,7 @@
 package io.vetka.gateway.mgmt.endpoint.resolver;
 
 import io.vetka.gateway.mgmt.endpoint.model.IEndpoint;
-import io.vetka.gateway.persistence.api.graphqlendpoint.IGraphQlEndpointService;
+import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 
