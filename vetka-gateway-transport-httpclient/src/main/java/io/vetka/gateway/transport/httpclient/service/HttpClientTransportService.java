@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.annotation.Primary;
 import org.springframework.graphql.GraphQlResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 @Service
+@Primary
 @RequiredArgsConstructor
 @Slf4j
 public class HttpClientTransportService implements ITransportService {
