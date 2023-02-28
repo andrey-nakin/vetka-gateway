@@ -1,1 +1,6 @@
-rootProject.name = 'vetka-gateway'
+rootProject.name = 'io.vetka.gateway'
+include 'vetka-gateway-demo'
+include 'vetka-gateway-core'
+include 'vetka-gateway-persistence-mongo'
+include 'vetka-gateway-transport-httpclient'
+

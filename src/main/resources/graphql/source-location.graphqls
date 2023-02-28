@@ -1,4 +1,0 @@
-type SourceLocation {
-  line: Int
-  column: Int
-}

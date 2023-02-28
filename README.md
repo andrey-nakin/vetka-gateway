@@ -2,8 +2,8 @@
 
 Simple GraphQL router written in Java and WebFlux framework.
 
+* Has modularized architecture.
 * Has its own GraphQL API for management purposes.
-* Stores configuration in MongoDB.
 
 ## Configuration
 
