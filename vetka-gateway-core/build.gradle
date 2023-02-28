@@ -8,6 +8,7 @@ compileJava {
     options.compilerArgs
             << '-Amapstruct.defaultComponentModel=spring'
             << '-Xlint:deprecation'
+            << '-Xlint:unchecked'
 }
 
 repositories {
