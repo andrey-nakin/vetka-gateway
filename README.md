@@ -1,6 +1,6 @@
-# vetka-gateway
+# io.vetka.gateway
 
-Simple GraphQL router written in Java and WebFlux framework.
+A simple Spring Boot-based GraphQL router.
 
 * Has modularized architecture.
 * Has its own GraphQL API for management purposes.
