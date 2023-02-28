@@ -1,4 +1,4 @@
-# io.vetka.gateway
+# vetka-gateway
 
 A simple Spring Boot-based GraphQL router.
 
