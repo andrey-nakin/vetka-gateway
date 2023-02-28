@@ -1,0 +1,4 @@
+type GraphQLError {
+  message: String!
+  locations: [SourceLocation!]!
+}
