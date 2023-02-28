@@ -7,6 +7,17 @@ allprojects {
     version '0.1.0-SNAPSHOT'
 }
 
+subprojects {
+    apply plugin: 'java'
+
+    compileJava {
+        options.compilerArgs
+                << '-Amapstruct.defaultComponentModel=spring'
+                << '-Xlint:deprecation'
+                << '-Xlint:unchecked'
+    }
+}
+
 repositories {
     mavenCentral()
 }
