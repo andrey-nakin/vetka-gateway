@@ -10,10 +10,10 @@ import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateError;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateErrors;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdatePayload;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateResponse;
-import io.vetka.gateway.persistence.api.IPersistenceServiceFacade;
 import io.vetka.gateway.persistence.api.exception.endpoint.EndpointDuplicatingNameException;
 import io.vetka.gateway.persistence.api.exception.endpoint.EndpointEmptyNameException;
 import io.vetka.gateway.persistence.api.exception.endpoint.EndpointNotFoundException;
+import io.vetka.gateway.persistence.api.graphqlendpoint.IGraphQlEndpointService;
 import io.vetka.gateway.schema.exception.BadSchemaException;
 import io.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
 import java.util.HashMap;
@@ -32,7 +32,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class UpdateGraphQlEndpointResolver {
 
-    private final IPersistenceServiceFacade persistenceServiceFacade;
+    private final IGraphQlEndpointService graphQlEndpointService;
     private final GraphQlSchemaRegistryService graphQlSchemaRegistryService;
     private final GraphQLErrorMapper graphQLErrorMapper;
 
@@ -42,8 +42,7 @@ public class UpdateGraphQlEndpointResolver {
 
         log.info("updateGraphQlEndpoint");
 
-        return validate(environment).flatMap(
-                        validatedInput -> persistenceServiceFacade.graphQlEndpointService().update(validatedInput))
+        return validate(environment).flatMap(graphQlEndpointService::update)
                 .doOnSuccess(unused -> graphQlSchemaRegistryService.reloadSchemas())
                 .map(e -> (GraphQlEndpointUpdatePayload) GraphQlEndpointUpdateResponse.builder()
                         .graphQlEndpoint(e)

@@ -11,7 +11,7 @@ import graphql.schema.idl.SchemaPrinter;
 import graphql.schema.idl.errors.SchemaProblem;
 import io.vetka.gateway.graphql.GraphQlSchemaMerger;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
-import io.vetka.gateway.persistence.api.IPersistenceServiceFacade;
+import io.vetka.gateway.persistence.api.graphqlendpoint.IGraphQlEndpointService;
 import io.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import io.vetka.gateway.schema.bo.GraphQlSchemaInfo;
 import io.vetka.gateway.schema.exception.BadSchemaException;
@@ -35,7 +35,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class GraphQlSchemaRegistryService {
 
-    private final IPersistenceServiceFacade persistenceServiceFacade;
+    private final IGraphQlEndpointService graphQlEndpointService;
     private final ITransportService transportService;
 
     @Getter
@@ -87,7 +87,7 @@ public class GraphQlSchemaRegistryService {
     }
 
     private Flux<GraphQlEndpointInfo> loadAndParse() {
-        return persistenceServiceFacade.graphQlEndpointService().findAll().map(this::parse);
+        return graphQlEndpointService.findAll().map(this::parse);
     }
 
     private Mono<List<GraphQlEndpointInfo>> reloadAndParse() {

@@ -1,7 +1,7 @@
 package io.vetka.gateway.mgmt.endpoint.resolver;
 
 import io.vetka.gateway.mgmt.endpoint.model.IEndpoint;
-import io.vetka.gateway.persistence.api.IPersistenceServiceFacade;
+import io.vetka.gateway.persistence.api.graphqlendpoint.IGraphQlEndpointService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 
@@ -12,10 +12,10 @@ import reactor.core.publisher.Flux;
 @RequiredArgsConstructor
 public class EndpointsResolver {
 
-    private final IPersistenceServiceFacade persistenceServiceFacade;
+    private final IGraphQlEndpointService graphQlEndpointService;
 
     @QueryMapping
     public Flux<IEndpoint> endpoints() {
-        return persistenceServiceFacade.graphQlEndpointService().findAll().map(e -> e);
+        return graphQlEndpointService.findAll().map(e -> e);
     }
 }

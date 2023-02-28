@@ -9,9 +9,9 @@ import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationErrors
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationPayload;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationResponse;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointErrorBadSchema;
-import io.vetka.gateway.persistence.api.IPersistenceServiceFacade;
 import io.vetka.gateway.persistence.api.exception.endpoint.EndpointDuplicatingNameException;
 import io.vetka.gateway.persistence.api.exception.endpoint.EndpointEmptyNameException;
+import io.vetka.gateway.persistence.api.graphqlendpoint.IGraphQlEndpointService;
 import io.vetka.gateway.schema.exception.BadSchemaException;
 import io.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
 import java.util.HashMap;
@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class CreateGraphQlEndpointResolver {
 
-    private final IPersistenceServiceFacade persistenceServiceFacade;
+    private final IGraphQlEndpointService graphQlEndpointService;
     private final GraphQlSchemaRegistryService graphQlSchemaRegistryService;
     private final GraphQLErrorMapper graphQLErrorMapper;
 
@@ -38,8 +38,7 @@ public class CreateGraphQlEndpointResolver {
     public Mono<GraphQlEndpointCreationPayload> createGraphQlEndpoint(@NonNull DataFetchingEnvironment environment) {
         log.info("createGraphQlEndpoint");
 
-        return validate(environment).flatMap(
-                        validatedInput -> persistenceServiceFacade.graphQlEndpointService().create(validatedInput))
+        return validate(environment).flatMap(graphQlEndpointService::create)
                 .doOnSuccess(unused -> graphQlSchemaRegistryService.reloadSchemas())
                 .map(e -> (GraphQlEndpointCreationPayload) GraphQlEndpointCreationResponse.builder()
                         .graphQlEndpoint(e)
