@@ -13,6 +13,12 @@ A simple Spring Boot-based GraphQL router.
 * `vetka-gateway-demo` - application demonstrating the packaging of the Vetka Gateway libraries in a single executable
   application.
 
+## Usage
+
+* Create your own Spring Boot application. You can use `vetka-gateway-demo` as a working example.
+* Add `vetka-gateway-core` library as a dependency.
+* Add other `vetka-gateway-*` libraries to be used as default implementations or implement your own implementations.
+
 ## Configuration
 
 By default Vetka Gateway listens to management requests on `/graphql` address.
