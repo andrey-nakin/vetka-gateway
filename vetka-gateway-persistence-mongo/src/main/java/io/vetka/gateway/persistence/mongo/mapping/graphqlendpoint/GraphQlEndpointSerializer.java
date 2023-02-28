@@ -7,10 +7,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
-import org.springframework.context.annotation.Lazy;
 
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-@Lazy
 public abstract class GraphQlEndpointSerializer {
 
     public abstract GraphQlEndpoint toModel(GraphQlEndpointDocument src);

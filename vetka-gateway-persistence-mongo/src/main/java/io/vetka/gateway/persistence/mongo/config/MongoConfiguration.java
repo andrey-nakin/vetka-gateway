@@ -6,7 +6,6 @@ import io.vetka.gateway.persistence.mongo.properties.MongoProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
 
 @Configuration
@@ -16,7 +15,6 @@ public class MongoConfiguration extends AbstractReactiveMongoConfiguration {
     private MongoProperties properties;
 
     @Bean
-    @Lazy
     public MongoClient mongoClient() {
         return MongoClients.create();
     }
