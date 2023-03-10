@@ -9,7 +9,7 @@ import io.vetka.gateway.graphql.GraphQlQueryBuilder;
 import io.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import io.vetka.gateway.transport.api.ITransportService;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -65,7 +65,7 @@ public class GraphQlClientLoader implements MappedBatchLoader<DataFetchingEnviro
     private Map<DataFetchingEnvironment, DataFetcherResult<Object>> parseQueryResponse(final QueryData queryData,
             final ExecutionResult response) {
 
-        final var result = new HashMap<DataFetchingEnvironment, DataFetcherResult<Object>>();
+        final var result = new IdentityHashMap<DataFetchingEnvironment, DataFetcherResult<Object>>();
 
         final Map<String, Object> data = response.getData();
         if (data != null) {
