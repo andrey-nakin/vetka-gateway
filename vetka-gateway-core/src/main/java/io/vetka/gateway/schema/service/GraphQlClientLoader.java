@@ -67,22 +67,24 @@ public class GraphQlClientLoader implements MappedBatchLoader<DataFetchingEnviro
 
         final Map<String, Object> data = response.getData();
         if (data != null) {
-            data.forEach((key, value) -> result.put(queryData.keyMap().get(key),
-                    DataFetcherResult.newResult().data(value).build()));
+            data.forEach((key, value) -> {
+                final var env = queryData.keyMap().get(key);
+                result.put(env, DataFetcherResult.newResult().data(value).localContext(env.getLocalContext()).build());
+            });
         }
 
         if (response.getErrors() != null && !response.getErrors().isEmpty()) {
             if (result.isEmpty()) {
                 if (!queryData.keyMap().isEmpty()) {
-                    result.put(any(queryData.keyMap().values()),
-                            DataFetcherResult.newResult().errors(response.getErrors()).build());
+                    final var env = any(queryData.keyMap().values());
+                    result.put(env, DataFetcherResult.newResult()
+                            .errors(response.getErrors())
+                            .localContext(env.getLocalContext())
+                            .build());
                 }
             } else {
                 final var firstKey = any(result.keySet());
-                result.put(firstKey, DataFetcherResult.newResult()
-                        .data(result.get(firstKey).getData())
-                        .errors(response.getErrors())
-                        .build());
+                result.put(firstKey, result.get(firstKey).transform(b -> b.errors(response.getErrors())));
             }
         }
 
