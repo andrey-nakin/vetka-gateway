@@ -1,11 +1,13 @@
 package io.vetka.gateway.schema.service;
 
 import graphql.ExecutionResult;
+import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetchingEnvironment;
 import io.vetka.gateway.endpoint.GatewayLocalContext;
 import io.vetka.gateway.graphql.GraphQlQueryBuilder;
 import io.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import io.vetka.gateway.transport.api.ITransportService;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -21,13 +23,14 @@ import org.springframework.http.HttpHeaders;
 
 @RequiredArgsConstructor
 @Slf4j
-public class GraphQlClientLoader implements MappedBatchLoader<DataFetchingEnvironment, Object> {
+public class GraphQlClientLoader implements MappedBatchLoader<DataFetchingEnvironment, DataFetcherResult<Object>> {
 
     private final ITransportService transportService;
     private final GraphQlEndpointInfo graphQlEndpointInfo;
 
     @Override
-    public CompletionStage<Map<DataFetchingEnvironment, Object>> load(final Set<DataFetchingEnvironment> keys) {
+    public CompletionStage<Map<DataFetchingEnvironment, DataFetcherResult<Object>>> load(
+            final Set<DataFetchingEnvironment> keys) {
         return CompletableFuture.supplyAsync(() -> prepareQuery(keys)).thenCompose(this::sendQuery);
     }
 
@@ -51,20 +54,45 @@ public class GraphQlClientLoader implements MappedBatchLoader<DataFetchingEnviro
         return new QueryData(keyMap, httpHeaders, query);
     }
 
-    private CompletionStage<Map<DataFetchingEnvironment, Object>> sendQuery(final QueryData queryData) {
+    private CompletionStage<Map<DataFetchingEnvironment, DataFetcherResult<Object>>> sendQuery(
+            final QueryData queryData) {
         return transportService.request(queryData.httpHeaders(), queryData.query(), graphQlEndpointInfo)
                 .thenApply(response -> parseQueryResponse(queryData, response));
     }
 
-    private Map<DataFetchingEnvironment, Object> parseQueryResponse(final QueryData queryData,
+    private Map<DataFetchingEnvironment, DataFetcherResult<Object>> parseQueryResponse(final QueryData queryData,
             final ExecutionResult response) {
-        final var result = new HashMap<DataFetchingEnvironment, Object>();
+
+        final var result = new HashMap<DataFetchingEnvironment, DataFetcherResult<Object>>();
+
         final Map<String, Object> data = response.getData();
         if (data != null) {
-            data.forEach((key, value) -> result.put(queryData.keyMap().get(key), value));
+            data.forEach((key, value) -> result.put(queryData.keyMap().get(key),
+                    DataFetcherResult.newResult().data(value).build()));
         }
-        // TODO handle errors and extensions
+
+        if (response.getErrors() != null && !response.getErrors().isEmpty()) {
+            if (result.isEmpty()) {
+                if (!queryData.keyMap().isEmpty()) {
+                    result.put(any(queryData.keyMap().values()),
+                            DataFetcherResult.newResult().errors(response.getErrors()).build());
+                }
+            } else {
+                final var firstKey = any(result.keySet());
+                result.put(firstKey, DataFetcherResult.newResult()
+                        .data(result.get(firstKey).getData())
+                        .errors(response.getErrors())
+                        .build());
+            }
+        }
+
+        // TODO handle extensions
+
         return result;
+    }
+
+    private static <T> T any(final Collection<T> coll) {
+        return coll.iterator().next();
     }
 
     private record QueryData(Map<String, DataFetchingEnvironment> keyMap, HttpHeaders httpHeaders, String query) {}
