@@ -2,7 +2,9 @@ package io.vetka.gateway.transport.httpclient.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import graphql.ExecutionResult;
 import io.vetka.gateway.endpoint.bo.WebGraphQlRequestWrapper;
+import io.vetka.gateway.graphql.DefaultExecutionResult;
 import io.vetka.gateway.objectmap.service.ObjectMapperHelper;
 import io.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import io.vetka.gateway.schema.service.GraphQlConstants;
@@ -26,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Primary;
-import org.springframework.graphql.GraphQlResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -84,7 +85,7 @@ public class HttpClientTransportService implements ITransportService {
     }
 
     @Override
-    public CompletionStage<GraphQlResponse> request(final HttpHeaders httpHeaders, final String query,
+    public CompletionStage<ExecutionResult> request(final HttpHeaders httpHeaders, final String query,
             final GraphQlEndpointInfo graphQlEndpointInfo) {
 
         if (log.isDebugEnabled()) {
@@ -107,7 +108,7 @@ public class HttpClientTransportService implements ITransportService {
                 .thenApply(httpResponse -> parseGraphQlResponse(httpResponse, graphQlEndpointInfo));
     }
 
-    private GraphQlResponse parseGraphQlResponse(final HttpResponse<String> httpResponse,
+    private ExecutionResult parseGraphQlResponse(final HttpResponse<String> httpResponse,
             final GraphQlEndpointInfo graphQlEndpointInfo) {
 
         if (log.isDebugEnabled()) {
@@ -119,7 +120,7 @@ public class HttpClientTransportService implements ITransportService {
         }
 
         try {
-            return objectMapperHelper.getObjectMapper().readValue(httpResponse.body(), DefaultGraphQlResponse.class);
+            return objectMapperHelper.getObjectMapper().readValue(httpResponse.body(), DefaultExecutionResult.class);
         } catch (JsonMappingException ex) {
             throw new GraphQlJsonMappingException(ex, graphQlEndpointInfo);
         } catch (JsonProcessingException ex) {

@@ -1,5 +1,6 @@
 package io.vetka.gateway.schema.service;
 
+import graphql.ExecutionResult;
 import graphql.schema.DataFetchingEnvironment;
 import io.vetka.gateway.endpoint.GatewayLocalContext;
 import io.vetka.gateway.graphql.GraphQlQueryBuilder;
@@ -16,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.dataloader.MappedBatchLoader;
-import org.springframework.graphql.GraphQlResponse;
 import org.springframework.http.HttpHeaders;
 
 @RequiredArgsConstructor
@@ -57,7 +57,7 @@ public class GraphQlClientLoader implements MappedBatchLoader<DataFetchingEnviro
     }
 
     private Map<DataFetchingEnvironment, Object> parseQueryResponse(final QueryData queryData,
-            final GraphQlResponse response) {
+            final ExecutionResult response) {
         final var result = new HashMap<DataFetchingEnvironment, Object>();
         final Map<String, Object> data = response.getData();
         if (data != null) {
