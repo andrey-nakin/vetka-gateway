@@ -17,7 +17,7 @@ public class HttpUtils {
         for (final var param : type.split("\\s*,\\s*")) {
             final var kv = param.split("\\s*=\\s*");
             if (kv.length > 1) {
-                if ("charset".equalsIgnoreCase(StringUtils.strip(kv[0]))) {
+                if ("charset".equalsIgnoreCase(kv[0].trim())) {
                     return Optional.of(Charset.forName(unquote(kv[1])));
                 }
             }
