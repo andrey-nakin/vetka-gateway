@@ -3,6 +3,7 @@ package io.vetka.gateway.schema.service;
 import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
+import io.vetka.gateway.schema.bo.EnvKey;
 import io.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import io.vetka.gateway.transport.api.ITransportService;
 import java.util.concurrent.CompletionStage;
@@ -20,14 +21,13 @@ public class GraphQlDataFetcher implements DataFetcher<CompletionStage<DataFetch
 
     @Override
     public CompletionStage<DataFetcherResult<Object>> get(final DataFetchingEnvironment environment) {
-        final DataLoader<DataFetchingEnvironment, DataFetcherResult<Object>> dataLoader =
-                environment.getDataLoaderRegistry()
-                        .computeIfAbsent(graphQlEndpointInfo.getGraphQlEndpoint().getId(), key -> {
-                            log.debug("Creating data loader for key {}, address {}", key,
-                                    graphQlEndpointInfo.getGraphQlEndpoint().getAddress());
-                            return DataLoaderFactory.newMappedDataLoader(
-                                    new GraphQlClientLoader(transportService, graphQlEndpointInfo));
-                        });
-        return dataLoader.load(environment);
+        final DataLoader<EnvKey, DataFetcherResult<Object>> dataLoader = environment.getDataLoaderRegistry()
+                .computeIfAbsent(graphQlEndpointInfo.getGraphQlEndpoint().getId(), key -> {
+                    log.debug("Creating data loader for key {}, address {}", key,
+                            graphQlEndpointInfo.getGraphQlEndpoint().getAddress());
+                    return DataLoaderFactory.newMappedDataLoader(
+                            new GraphQlClientLoader(transportService, graphQlEndpointInfo));
+                });
+        return dataLoader.load(new EnvKey(environment));
     }
 }
