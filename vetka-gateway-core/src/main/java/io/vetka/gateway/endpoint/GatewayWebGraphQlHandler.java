@@ -7,6 +7,7 @@ import io.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.dataloader.DataLoaderRegistry;
 import org.springframework.graphql.server.WebGraphQlResponse;
 import org.springframework.graphql.support.DefaultExecutionGraphQlResponse;
 import org.springframework.stereotype.Component;
@@ -28,9 +29,8 @@ public class GatewayWebGraphQlHandler {
         final var build = GraphQL.newGraphQL(schemaInfo.getSchema()).build();
         final var localContext = new GatewayLocalContext(schemaInfo, requestWrapper);
         requestWrapper.request()
-                .configureExecutionInput((ei, b) -> b.localContext(localContext)
-                        .dataLoaderRegistry(localContext.getDataLoaderRegistry())
-                        .build());
+                .configureExecutionInput(
+                        (ei, b) -> b.localContext(localContext).dataLoaderRegistry(new DataLoaderRegistry()).build());
         final var executionInput = requestWrapper.request().toExecutionInput();
         return Mono.fromCompletionStage(build.executeAsync(executionInput))
                 .map(executionResult -> new DefaultExecutionGraphQlResponse(executionInput, executionResult))
