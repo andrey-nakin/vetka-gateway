@@ -4,6 +4,7 @@ import graphql.GraphQL;
 import io.vetka.gateway.endpoint.bo.WebGraphQlRequestWrapper;
 import io.vetka.gateway.schema.service.GraphQlConstants;
 import io.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
+import java.util.Map;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,9 +31,10 @@ public class GatewayWebGraphQlHandler {
         final var schemaInfo = graphQlSchemaRegistryService.getInfo();
         final var build = GraphQL.newGraphQL(schemaInfo.getSchema()).build();
         requestWrapper.request()
-                .configureExecutionInput((ei, b) -> b.dataLoaderRegistry(new DataLoaderRegistry()).build());
+                .configureExecutionInput((ei, b) -> b.dataLoaderRegistry(new DataLoaderRegistry())
+                        .graphQLContext(Map.of(REQUEST_WRAPPER, requestWrapper))
+                        .build());
         final var executionInput = requestWrapper.request().toExecutionInput();
-        executionInput.getGraphQLContext().put(REQUEST_WRAPPER, requestWrapper);
         return Mono.fromCompletionStage(build.executeAsync(executionInput))
                 .map(executionResult -> new DefaultExecutionGraphQlResponse(executionInput, executionResult))
                 .map(WebGraphQlResponse::new)
