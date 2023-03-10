@@ -3,7 +3,8 @@ package io.vetka.gateway.schema.service;
 import graphql.ExecutionResult;
 import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetchingEnvironment;
-import io.vetka.gateway.endpoint.GatewayLocalContext;
+import io.vetka.gateway.endpoint.GatewayWebGraphQlHandler;
+import io.vetka.gateway.endpoint.bo.WebGraphQlRequestWrapper;
 import io.vetka.gateway.graphql.GraphQlQueryBuilder;
 import io.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import io.vetka.gateway.transport.api.ITransportService;
@@ -45,8 +46,9 @@ public class GraphQlClientLoader implements MappedBatchLoader<DataFetchingEnviro
 
         final HttpHeaders httpHeaders;
         if (!keys.isEmpty()) {
-            final GatewayLocalContext context = keys.iterator().next().getLocalContext();
-            httpHeaders = context.getRequestWrapper().request().getHeaders();
+            final var context = keys.iterator().next().getGraphQlContext();
+            final WebGraphQlRequestWrapper rw = context.get(GatewayWebGraphQlHandler.REQUEST_WRAPPER);
+            httpHeaders = rw.request().getHeaders();
         } else {
             httpHeaders = HttpHeaders.EMPTY;
         }

@@ -19,6 +19,8 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class GatewayWebGraphQlHandler {
 
+    public static final String REQUEST_WRAPPER = "__rw";
+
     private final GraphQlSchemaRegistryService graphQlSchemaRegistryService;
 
     public Mono<ServerResponse> handleRequest(@NonNull final WebGraphQlRequestWrapper requestWrapper) {
@@ -27,11 +29,10 @@ public class GatewayWebGraphQlHandler {
 
         final var schemaInfo = graphQlSchemaRegistryService.getInfo();
         final var build = GraphQL.newGraphQL(schemaInfo.getSchema()).build();
-        final var localContext = new GatewayLocalContext(schemaInfo, requestWrapper);
         requestWrapper.request()
-                .configureExecutionInput(
-                        (ei, b) -> b.localContext(localContext).dataLoaderRegistry(new DataLoaderRegistry()).build());
+                .configureExecutionInput((ei, b) -> b.dataLoaderRegistry(new DataLoaderRegistry()).build());
         final var executionInput = requestWrapper.request().toExecutionInput();
+        executionInput.getGraphQLContext().put(REQUEST_WRAPPER, requestWrapper);
         return Mono.fromCompletionStage(build.executeAsync(executionInput))
                 .map(executionResult -> new DefaultExecutionGraphQlResponse(executionInput, executionResult))
                 .map(WebGraphQlResponse::new)
