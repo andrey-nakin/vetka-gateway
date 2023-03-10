@@ -12,12 +12,19 @@ import io.vetka.gateway.transport.api.ITransportService;
 import io.vetka.gateway.transport.api.exception.GraphQlHttpErrorException;
 import io.vetka.gateway.transport.api.exception.GraphQlJsonMappingException;
 import io.vetka.gateway.transport.api.exception.GraphQlJsonProcessingException;
+import io.vetka.gateway.transport.api.exception.GraphQlTransportException;
 import io.vetka.gateway.transport.httpclient.properties.HttpClientProperties;
+import io.vetka.gateway.util.HttpUtils;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -104,11 +111,11 @@ public class HttpClientTransportService implements ITransportService {
                 .build();
 
         final var client = httpClient(graphQlEndpointInfo);
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())  //  TODO: inefficient on long responses
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
                 .thenApply(httpResponse -> parseGraphQlResponse(httpResponse, graphQlEndpointInfo));
     }
 
-    private ExecutionResult parseGraphQlResponse(final HttpResponse<String> httpResponse,
+    private ExecutionResult parseGraphQlResponse(final HttpResponse<InputStream> httpResponse,
             final GraphQlEndpointInfo graphQlEndpointInfo) {
 
         if (log.isDebugEnabled()) {
@@ -120,12 +127,21 @@ public class HttpClientTransportService implements ITransportService {
         }
 
         try {
-            return objectMapperHelper.getObjectMapper().readValue(httpResponse.body(), DefaultExecutionResult.class);
+            return objectMapperHelper.getObjectMapper()
+                    .readValue(new BufferedReader(
+                                    new InputStreamReader(httpResponse.body(), charsetFrom(httpResponse.headers()))),
+                            DefaultExecutionResult.class);
         } catch (JsonMappingException ex) {
             throw new GraphQlJsonMappingException(ex, graphQlEndpointInfo);
         } catch (JsonProcessingException ex) {
             throw new GraphQlJsonProcessingException(ex, graphQlEndpointInfo);
+        } catch (IOException ex) {
+            throw new GraphQlTransportException(ex);
         }
+    }
+
+    private static Charset charsetFrom(java.net.http.HttpHeaders headers) {
+        return headers.firstValue("Content-type").flatMap(HttpUtils::contentTypeCharset).orElse(StandardCharsets.UTF_8);
     }
 
     private static String[] headers(final ServerRequest.Headers headers) {
