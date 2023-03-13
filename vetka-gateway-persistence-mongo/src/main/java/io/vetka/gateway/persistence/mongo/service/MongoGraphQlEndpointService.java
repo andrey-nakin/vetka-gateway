@@ -5,9 +5,9 @@ import io.vetka.gateway.persistence.exception.endpoint.ConcurrentEndpointModific
 import io.vetka.gateway.persistence.exception.endpoint.DuplicatingEndpointNameException;
 import io.vetka.gateway.persistence.exception.endpoint.EndpointNotFoundException;
 import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
-import io.vetka.gateway.persistence.mongo.document.graphqlendpoint.GraphQlEndpointDocument;
-import io.vetka.gateway.persistence.mongo.mapping.graphqlendpoint.GraphQlEndpointMapper;
-import io.vetka.gateway.persistence.mongo.repository.graphqlendpoint.GraphQlEndpointRepository;
+import io.vetka.gateway.persistence.mongo.document.GraphQlEndpointDocument;
+import io.vetka.gateway.persistence.mongo.mapping.GraphQlEndpointMapper;
+import io.vetka.gateway.persistence.mongo.repository.GraphQlEndpointRepository;
 import java.util.Map;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

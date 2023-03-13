@@ -1,4 +1,4 @@
-package io.vetka.gateway.persistence.mongo.document.graphqlendpoint;
+package io.vetka.gateway.persistence.mongo.document;
 
 import lombok.Getter;
 import lombok.NonNull;

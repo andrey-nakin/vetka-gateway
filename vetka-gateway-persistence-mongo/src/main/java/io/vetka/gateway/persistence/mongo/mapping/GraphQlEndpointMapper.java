@@ -1,7 +1,7 @@
-package io.vetka.gateway.persistence.mongo.mapping.graphqlendpoint;
+package io.vetka.gateway.persistence.mongo.mapping;
 
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
-import io.vetka.gateway.persistence.mongo.document.graphqlendpoint.GraphQlEndpointDocument;
+import io.vetka.gateway.persistence.mongo.document.GraphQlEndpointDocument;
 import java.util.Map;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
