@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class EndpointDuplicatingNameException extends RuntimeException {
+public class DuplicatingEndpointNameException extends RuntimeException {
 
     @Getter
     private final String name;

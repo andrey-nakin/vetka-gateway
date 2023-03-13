@@ -1,7 +1,7 @@
 package io.vetka.gateway.persistence.mongo.service;
 
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
-import io.vetka.gateway.persistence.exception.endpoint.EndpointDuplicatingNameException;
+import io.vetka.gateway.persistence.exception.endpoint.DuplicatingEndpointNameException;
 import io.vetka.gateway.persistence.exception.endpoint.EndpointNotFoundException;
 import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
 import io.vetka.gateway.persistence.mongo.document.graphqlendpoint.GraphQlEndpointDocument;
@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -38,7 +39,7 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
         final var doc = serializer.toDocument(input);
         return repository.insert(doc).map(serializer::toModel).onErrorMap(ex -> {
             if (ex instanceof DuplicateKeyException) {
-                return new EndpointDuplicatingNameException(doc.getName());
+                return new DuplicatingEndpointNameException(doc.getName());
             } else {
                 return ex;
             }
@@ -68,7 +69,9 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
     private Mono<GraphQlEndpoint> update(@NonNull final GraphQlEndpointDocument doc) {
         return repository.save(doc).map(serializer::toModel).onErrorMap(ex -> {
             if (ex instanceof DuplicateKeyException) {
-                return new EndpointDuplicatingNameException(doc.getName());
+                return new DuplicatingEndpointNameException(doc.getName());
+            } else if (ex instanceof OptimisticLockingFailureException) {
+                return new EndpointNotFoundException(doc.getId());
             } else {
                 return ex;
             }

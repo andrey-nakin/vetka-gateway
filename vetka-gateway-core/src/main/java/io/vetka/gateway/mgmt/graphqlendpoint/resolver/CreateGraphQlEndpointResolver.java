@@ -9,7 +9,7 @@ import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationErrors
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationResponse;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationPayload;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointErrorBadSchema;
-import io.vetka.gateway.persistence.exception.endpoint.EndpointDuplicatingNameException;
+import io.vetka.gateway.persistence.exception.endpoint.DuplicatingEndpointNameException;
 import io.vetka.gateway.mgmt.endpoint.exception.EndpointEmptyNameException;
 import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
 import io.vetka.gateway.schema.exception.BadSchemaException;
@@ -50,7 +50,7 @@ public class CreateGraphQlEndpointResolver {
                         .build()))
                 .onErrorResume(EndpointEmptyNameException.class,
                         ex -> error(EndpointErrorEmptyName.builder().message("Empty endpoint name").build()))
-                .onErrorResume(EndpointDuplicatingNameException.class, ex -> error(
+                .onErrorResume(DuplicatingEndpointNameException.class, ex -> error(
                         EndpointErrorDuplicatingName.builder()
                                 .message("There is already an endpoint with the given name")
                                 .name(ex.getName())

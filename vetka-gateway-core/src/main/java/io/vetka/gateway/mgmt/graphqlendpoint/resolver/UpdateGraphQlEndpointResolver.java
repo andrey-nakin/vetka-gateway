@@ -10,7 +10,7 @@ import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateError;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateErrors;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateResponse;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdatePayload;
-import io.vetka.gateway.persistence.exception.endpoint.EndpointDuplicatingNameException;
+import io.vetka.gateway.persistence.exception.endpoint.DuplicatingEndpointNameException;
 import io.vetka.gateway.mgmt.endpoint.exception.EndpointEmptyNameException;
 import io.vetka.gateway.persistence.exception.endpoint.EndpointNotFoundException;
 import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
@@ -56,7 +56,7 @@ public class UpdateGraphQlEndpointResolver {
                         EndpointErrorUnknownId.builder().id(ex.getId()).message("Unknown endpoint ID").build()))
                 .onErrorResume(EndpointEmptyNameException.class,
                         ex -> error(EndpointErrorEmptyName.builder().message("Empty endpoint name").build()))
-                .onErrorResume(EndpointDuplicatingNameException.class, ex -> error(
+                .onErrorResume(DuplicatingEndpointNameException.class, ex -> error(
                         EndpointErrorDuplicatingName.builder()
                                 .name(ex.getName())
                                 .message("There is already an endpoint with the given name")
