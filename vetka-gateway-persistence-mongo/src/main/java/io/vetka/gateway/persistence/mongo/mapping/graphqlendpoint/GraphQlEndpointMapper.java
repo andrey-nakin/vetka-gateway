@@ -9,7 +9,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public abstract class GraphQlEndpointSerializer {
+public abstract class GraphQlEndpointMapper {
 
     public abstract GraphQlEndpoint toModel(GraphQlEndpointDocument src);
 

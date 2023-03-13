@@ -6,7 +6,7 @@ import io.vetka.gateway.persistence.exception.endpoint.DuplicatingEndpointNameEx
 import io.vetka.gateway.persistence.exception.endpoint.EndpointNotFoundException;
 import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
 import io.vetka.gateway.persistence.mongo.document.graphqlendpoint.GraphQlEndpointDocument;
-import io.vetka.gateway.persistence.mongo.mapping.graphqlendpoint.GraphQlEndpointSerializer;
+import io.vetka.gateway.persistence.mongo.mapping.graphqlendpoint.GraphQlEndpointMapper;
 import io.vetka.gateway.persistence.mongo.repository.graphqlendpoint.GraphQlEndpointRepository;
 import java.util.Map;
 import lombok.NonNull;
@@ -25,20 +25,20 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
 
-    private final GraphQlEndpointSerializer serializer;
+    private final GraphQlEndpointMapper mapper;
     private final GraphQlEndpointRepository repository;
 
     @Override
     public Flux<GraphQlEndpoint> findAll() {
-        return repository.findAll().map(serializer::toModel);
+        return repository.findAll().map(mapper::toModel);
     }
 
     @Override
     public Mono<GraphQlEndpoint> create(@NonNull final Map<String, Object> input) {
         log.info("create input={}", input);
 
-        final var doc = serializer.toDocument(input);
-        return repository.insert(doc).map(serializer::toModel).onErrorMap(ex -> {
+        final var doc = mapper.toDocument(input);
+        return repository.insert(doc).map(mapper::toModel).onErrorMap(ex -> {
             if (ex instanceof DuplicateKeyException) {
                 return new DuplicatingEndpointNameException(doc.getName());
             } else {
@@ -54,7 +54,7 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
         final var id = (String) input.get("id");
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new EndpointNotFoundException(id)))
-                .map(existing -> serializer.toDocument(existing, input))
+                .map(existing -> mapper.toDocument(existing, input))
                 .flatMap(this::update);
     }
 
@@ -70,7 +70,7 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
     private Mono<GraphQlEndpoint> update(@NonNull final GraphQlEndpointDocument doc) {
         log.info("update doc={}", doc);
 
-        return repository.save(doc).map(serializer::toModel).onErrorMap(ex -> {
+        return repository.save(doc).map(mapper::toModel).onErrorMap(ex -> {
             if (ex instanceof DuplicateKeyException) {
                 return new DuplicatingEndpointNameException(doc.getName());
             } else if (ex instanceof OptimisticLockingFailureException) {
