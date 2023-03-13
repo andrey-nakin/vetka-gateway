@@ -9,6 +9,7 @@ import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaPrinter;
 import graphql.schema.idl.errors.SchemaProblem;
+import io.vetka.gateway.graphql.GraphQlQueryBuilder;
 import io.vetka.gateway.graphql.GraphQlSchemaMerger;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
 import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
@@ -39,6 +40,7 @@ import reactor.core.publisher.Mono;
 public class GraphQlSchemaRegistryService {
 
     private final IGraphQlEndpointService graphQlEndpointService;
+    private final GraphQlQueryBuilder graphQlQueryBuilder;
     private final ITransportService transportService;
 
     @Getter
@@ -120,7 +122,7 @@ public class GraphQlSchemaRegistryService {
         final Set<String> polymorphicTypes = new HashSet<>();
 
         for (final var ep : endpoints) {
-            final var dataFetcher = new GraphQlDataFetcher(transportService, ep);
+            final var dataFetcher = new GraphQlDataFetcher(graphQlQueryBuilder, transportService, ep);
             addFetchers(ep.getSchema().getQueryType(), queryDataFetchers, dataFetcher);
             addFetchers(ep.getSchema().getMutationType(), mutationDataFetchers, dataFetcher);
             addFetchers(ep.getSchema().getSubscriptionType(), subscriptionDataFetchers, dataFetcher);

@@ -2,6 +2,7 @@ package io.vetka.gateway;
 
 import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
 import io.vetka.gateway.persistence.inmemory.service.InMemoryGraphQlEndpointService;
+import io.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
 import io.vetka.gateway.transport.api.ITransportService;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,8 @@ public abstract class TestBase {
 
     @Autowired
     protected IGraphQlEndpointService graphQlEndpointService;
+    @Autowired
+    protected GraphQlSchemaRegistryService graphQlSchemaRegistryService;
 
     @MockBean
     protected ITransportService transportService;
@@ -21,6 +24,7 @@ public abstract class TestBase {
     void beforeTest() {
         if (graphQlEndpointService instanceof InMemoryGraphQlEndpointService e) {
             e.clear();
+            graphQlSchemaRegistryService.reloadSchemas().block();
         }
     }
 }

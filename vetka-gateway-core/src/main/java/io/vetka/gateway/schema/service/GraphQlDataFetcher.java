@@ -3,6 +3,7 @@ package io.vetka.gateway.schema.service;
 import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
+import io.vetka.gateway.graphql.GraphQlQueryBuilder;
 import io.vetka.gateway.schema.bo.EnvKey;
 import io.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import io.vetka.gateway.transport.api.ITransportService;
@@ -16,6 +17,7 @@ import org.dataloader.DataLoaderFactory;
 @Slf4j
 public class GraphQlDataFetcher implements DataFetcher<CompletionStage<DataFetcherResult<Object>>> {
 
+    private final GraphQlQueryBuilder graphQlQueryBuilder;
     private final ITransportService transportService;
     private final GraphQlEndpointInfo graphQlEndpointInfo;
 
@@ -26,7 +28,7 @@ public class GraphQlDataFetcher implements DataFetcher<CompletionStage<DataFetch
                     log.debug("Creating data loader for key {}, address {}", key,
                             graphQlEndpointInfo.getGraphQlEndpoint().getAddress());
                     return DataLoaderFactory.newMappedDataLoader(
-                            new GraphQlClientLoader(transportService, graphQlEndpointInfo));
+                            new GraphQlClientLoader(graphQlQueryBuilder, transportService, graphQlEndpointInfo));
                 });
         return dataLoader.load(new EnvKey(environment));
     }

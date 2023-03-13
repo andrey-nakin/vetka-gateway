@@ -26,6 +26,7 @@ import org.springframework.http.HttpHeaders;
 @Slf4j
 public class GraphQlClientLoader implements MappedBatchLoader<EnvKey, DataFetcherResult<Object>> {
 
+    private final GraphQlQueryBuilder graphQlQueryBuilder;
     private final ITransportService transportService;
     private final GraphQlEndpointInfo graphQlEndpointInfo;
 
@@ -40,7 +41,7 @@ public class GraphQlClientLoader implements MappedBatchLoader<EnvKey, DataFetche
                         k.getEnvironment().getField().getName()), Function.identity()));
 
         final var query =
-                GraphQlQueryBuilder.build(keys.stream().map(EnvKey::getEnvironment).collect(Collectors.toSet()));
+                graphQlQueryBuilder.build(keys.stream().map(EnvKey::getEnvironment).collect(Collectors.toSet()));
         log.debug("Sending GraphQL request to {}: {}", graphQlEndpointInfo.getGraphQlEndpoint().getAddress(), query);
 
         final HttpHeaders httpHeaders;
