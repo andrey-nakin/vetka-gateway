@@ -25,7 +25,7 @@ public class DefaultExecutionResult implements ExecutionResult {
     }
 
     @Override
-    @SuppressWarnings("TypeParameterUnusedInFormals")
+    @SuppressWarnings("unchecked")
     public <T> T getData() {
         return (T) data;
     }
