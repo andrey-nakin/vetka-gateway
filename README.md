@@ -9,6 +9,8 @@ A simple Spring Boot-based GraphQL router.
 
 * `vetka-gateway-core` - base gateway logic.
 * `vetka-gateway-persistence-mongo` - implementation of the persistence layer that uses MongoDB as a storage engine.
+* `vetka-gateway-persistence-inmemory` - implementation of the persistence layer that simply stores the configuration in
+  the memory.
 * `vetka-gateway-transport-httpclient` - implementation of the transport layer that uses Java `HttpClient`.
 * `vetka-gateway-demo` - application demonstrating the packaging of the Vetka Gateway libraries in a single executable
   application.
