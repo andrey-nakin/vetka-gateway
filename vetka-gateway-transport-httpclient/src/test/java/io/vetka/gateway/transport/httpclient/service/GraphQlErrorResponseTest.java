@@ -45,7 +45,10 @@ class GraphQlErrorResponseTest extends WiremockTestBase {
                                         "c" : {
                                             "d": "e"
                                         }
-                                    }
+                                    },
+                                    "path": [
+                                        "a", 1, false
+                                    ]
                                 },
                                 {
                                     "message": "Message 2",
@@ -55,7 +58,8 @@ class GraphQlErrorResponseTest extends WiremockTestBase {
                                             "column": 6,
                                             "sourceName": null
                                         }
-                                    ]
+                                    ],
+                                    "path": []
                                 },
                                 {
                                     "message": "Message 3"
@@ -86,6 +90,12 @@ class GraphQlErrorResponseTest extends WiremockTestBase {
             assertEquals("b", e.getExtensions().get("a"));
             assertNotNull(e.getExtensions().get("c"));
             assertEquals("e", ((Map<String, Object>) e.getExtensions().get("c")).get("d"));
+
+            assertNotNull(e.getPath());
+            assertEquals(3, e.getPath().size());
+            assertEquals("a", e.getPath().get(0));
+            assertEquals(1, e.getPath().get(1));
+            assertEquals(false, e.getPath().get(2));
         }
 
         {
@@ -99,6 +109,9 @@ class GraphQlErrorResponseTest extends WiremockTestBase {
             assertNull(e.getLocations().get(0).getSourceName());
 
             assertNull(e.getExtensions());
+
+            assertNotNull(e.getPath());
+            assertEquals(0, e.getPath().size());
         }
 
         {
@@ -106,6 +119,7 @@ class GraphQlErrorResponseTest extends WiremockTestBase {
             assertEquals("Message 3", e.getMessage());
             assertNull(e.getLocations());
             assertNull(e.getExtensions());
+            assertNull(e.getPath());
         }
     }
 }

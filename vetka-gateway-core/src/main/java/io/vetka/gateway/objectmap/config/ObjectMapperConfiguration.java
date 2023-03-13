@@ -1,6 +1,5 @@
 package io.vetka.gateway.objectmap.config;
 
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -25,9 +24,7 @@ public class ObjectMapperConfiguration {
         final var graphqlModule = new SimpleModule().addDeserializer(GraphQLError.class, new JsonDeserializer<>() {
             @Override
             @SuppressWarnings("unchecked")
-            public GraphQLError deserialize(JsonParser p, DeserializationContext ctxt)
-                    throws IOException, JacksonException {
-
+            public GraphQLError deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
                 final var builder = GraphqlErrorBuilder.newError();
                 final JsonNode tree = p.getCodec().readTree(p);
 
@@ -46,6 +43,11 @@ public class ObjectMapperConfiguration {
                 final var extensions = tree.get("extensions");
                 if (extensions != null && extensions.isObject()) {
                     builder.extensions(p.getCodec().treeToValue(extensions, Map.class));
+                }
+
+                final var path = tree.get("path");
+                if (path != null && path.isArray()) {
+                    builder.path(Arrays.asList(p.getCodec().treeToValue(path, Object[].class)));
                 }
 
                 return builder.build();
