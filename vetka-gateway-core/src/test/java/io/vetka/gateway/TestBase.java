@@ -15,7 +15,7 @@ public abstract class TestBase {
     protected IGraphQlEndpointService graphQlEndpointService;
 
     @MockBean
-    private ITransportService transportService;
+    protected ITransportService transportService;
 
     @BeforeEach
     void beforeTest() {
