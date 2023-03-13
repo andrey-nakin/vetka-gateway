@@ -13,7 +13,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Configuration
 public class GatewayRouter {
 
-    private static final String DEFAULT_PATH = "/";
+    public static final String DEFAULT_PATH = "/";
 
     @Bean
     public RouterFunction<ServerResponse> route(final EndpointProperties endpointProperties,
