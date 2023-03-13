@@ -4,14 +4,15 @@ import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
 import io.vetka.gateway.persistence.api.exception.endpoint.EndpointDuplicatingNameException;
 import io.vetka.gateway.persistence.api.exception.endpoint.EndpointNotFoundException;
 import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
+import io.vetka.gateway.persistence.mongo.document.graphqlendpoint.GraphQlEndpointDocument;
 import io.vetka.gateway.persistence.mongo.mapping.graphqlendpoint.GraphQlEndpointSerializer;
 import io.vetka.gateway.persistence.mongo.repository.graphqlendpoint.GraphQlEndpointRepository;
 import java.util.Map;
-import java.util.Objects;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -34,8 +35,14 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
     public Mono<GraphQlEndpoint> create(@NonNull final Map<String, Object> input) {
         log.info("create input={}", input);
 
-        return checkName((String) input.get("name"), null).flatMap(
-                unused -> repository.insert(serializer.toDocument(input)).map(serializer::toModel));
+        final var doc = serializer.toDocument(input);
+        return repository.insert(doc).map(serializer::toModel).onErrorMap(ex -> {
+            if (ex instanceof DuplicateKeyException) {
+                return new EndpointDuplicatingNameException(doc.getName());
+            } else {
+                return ex;
+            }
+        });
     }
 
     @Override
@@ -43,9 +50,10 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
         log.info("update input={}", input);
 
         final var id = (String) input.get("id");
-        return checkName((String) input.get("name"), id).flatMap(unused -> repository.findById(id))
-                .flatMap(existing -> repository.save(serializer.toDocument(existing, input)))
-                .map(serializer::toModel);
+        return repository.findById(id)
+                .switchIfEmpty(Mono.error(new EndpointNotFoundException(id)))
+                .map(existing -> serializer.toDocument(existing, input))
+                .flatMap(this::update);
     }
 
     @Override
@@ -57,12 +65,12 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
                 .flatMap(e -> repository.deleteById(id));
     }
 
-    private Mono<String> checkName(final String name, final String id) {
-        return name == null ? Mono.empty() : repository.findAllByName(name).collectList().flatMap(l -> {
-            if (l.stream().anyMatch(e -> !Objects.equals(e.getId(), id))) {
-                return Mono.error(new EndpointDuplicatingNameException(name));
+    private Mono<GraphQlEndpoint> update(@NonNull final GraphQlEndpointDocument doc) {
+        return repository.save(doc).map(serializer::toModel).onErrorMap(ex -> {
+            if (ex instanceof DuplicateKeyException) {
+                return new EndpointDuplicatingNameException(doc.getName());
             } else {
-                return Mono.just(name);
+                return ex;
             }
         });
     }

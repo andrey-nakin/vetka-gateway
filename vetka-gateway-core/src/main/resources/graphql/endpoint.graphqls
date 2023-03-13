@@ -25,7 +25,7 @@ union EndpointDeletionError = EndpointErrorUnknownId
 
 type EndpointErrorUnknownId implements IError {
   message: String!
-  id: ID!
+  id: ID
 }
 
 type EndpointErrorDuplicatingName implements IError {

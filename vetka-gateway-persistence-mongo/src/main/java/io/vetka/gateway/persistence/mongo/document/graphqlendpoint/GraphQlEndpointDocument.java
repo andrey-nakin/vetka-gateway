@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document
@@ -13,6 +14,7 @@ public class GraphQlEndpointDocument {
 
     @Id
     private String id;
+    @Indexed(unique = true)
     @NonNull
     private String name;
     @NonNull

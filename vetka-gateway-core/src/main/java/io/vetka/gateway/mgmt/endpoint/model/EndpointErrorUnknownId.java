@@ -12,6 +12,5 @@ public class EndpointErrorUnknownId implements EndpointDeletionError, GraphQlEnd
 
     @NonNull
     private final String message;
-    @NonNull
     private final String id;
 }
