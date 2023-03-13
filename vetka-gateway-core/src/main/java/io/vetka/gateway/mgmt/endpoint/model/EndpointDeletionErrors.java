@@ -7,7 +7,7 @@ import lombok.NonNull;
 
 @Getter
 @Builder
-public class EndpointDeletionErrors implements EndpointDeletionPayload {
+public class EndpointDeletionErrors implements EndpointDeletionResponse {
 
     @NonNull
     private final List<EndpointDeletionError> errors;

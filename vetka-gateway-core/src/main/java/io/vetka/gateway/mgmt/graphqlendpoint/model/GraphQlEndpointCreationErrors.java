@@ -7,7 +7,7 @@ import lombok.NonNull;
 
 @Getter
 @Builder
-public class GraphQlEndpointCreationErrors implements GraphQlEndpointCreationPayload {
+public class GraphQlEndpointCreationErrors implements GraphQlEndpointCreationResponse {
 
     @NonNull
     private final List<GraphQlEndpointCreationError> errors;

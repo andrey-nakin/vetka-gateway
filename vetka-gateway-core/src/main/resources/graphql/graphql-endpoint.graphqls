@@ -1,6 +1,6 @@
 extend type Mutation {
-  createGraphQlEndpoint(input: GraphQlEndpointCreationInput!): GraphQlEndpointCreationPayload!
-  updateGraphQlEndpoint(input: GraphQlEndpointUpdateInput!): GraphQlEndpointUpdatePayload!
+  createGraphQlEndpoint(input: GraphQlEndpointCreationInput!): GraphQlEndpointCreationResponse!
+  updateGraphQlEndpoint(input: GraphQlEndpointUpdateInput!): GraphQlEndpointUpdateResponse!
 }
 
 type GraphQlEndpoint implements IEndpoint {
@@ -13,9 +13,9 @@ type GraphQlEndpoint implements IEndpoint {
   readTimeout: Int
 }
 
-union GraphQlEndpointCreationPayload = GraphQlEndpointCreationResponse | GraphQlEndpointCreationErrors
+union GraphQlEndpointCreationResponse = GraphQlEndpointCreationPayload | GraphQlEndpointCreationErrors
 
-type GraphQlEndpointCreationResponse {
+type GraphQlEndpointCreationPayload {
   graphQlEndpoint: GraphQlEndpoint!
 }
 
@@ -25,9 +25,9 @@ type GraphQlEndpointCreationErrors {
 
 union GraphQlEndpointCreationError = GraphQlEndpointErrorBadSchema | EndpointErrorDuplicatingName | EndpointErrorEmptyName
 
-union GraphQlEndpointUpdatePayload = GraphQlEndpointUpdateResponse | GraphQlEndpointUpdateErrors
+union GraphQlEndpointUpdateResponse = GraphQlEndpointUpdatePayload | GraphQlEndpointUpdateErrors
 
-type GraphQlEndpointUpdateResponse {
+type GraphQlEndpointUpdatePayload {
   graphQlEndpoint: GraphQlEndpoint!
 }
 

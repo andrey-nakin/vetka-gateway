@@ -8,12 +8,12 @@ extend type Query {
 }
 
 extend type Mutation {
-  deleteEndpoint(id: ID!): EndpointDeletionPayload!
+  deleteEndpoint(id: ID!): EndpointDeletionResponse!
 }
 
-union EndpointDeletionPayload = EndpointDeletionResponse | EndpointDeletionErrors
+union EndpointDeletionResponse = EndpointDeletionPayload | EndpointDeletionErrors
 
-type EndpointDeletionResponse {
+type EndpointDeletionPayload {
   id: ID!
 }
 

@@ -8,8 +8,8 @@ import io.vetka.gateway.mgmt.endpoint.model.EndpointErrorUnknownId;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointErrorBadSchema;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateError;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateErrors;
-import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdatePayload;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateResponse;
+import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdatePayload;
 import io.vetka.gateway.persistence.exception.endpoint.EndpointDuplicatingNameException;
 import io.vetka.gateway.mgmt.endpoint.exception.EndpointEmptyNameException;
 import io.vetka.gateway.persistence.exception.endpoint.EndpointNotFoundException;
@@ -37,14 +37,14 @@ public class UpdateGraphQlEndpointResolver {
     private final GraphQLErrorMapper graphQLErrorMapper;
 
     @MutationMapping
-    public Mono<GraphQlEndpointUpdatePayload> updateGraphQlEndpoint(
+    public Mono<GraphQlEndpointUpdateResponse> updateGraphQlEndpoint(
             @NonNull final DataFetchingEnvironment environment) {
 
         log.info("updateGraphQlEndpoint");
 
         return validate(environment).flatMap(graphQlEndpointService::update)
                 .doOnSuccess(unused -> graphQlSchemaRegistryService.reloadSchemas())
-                .map(e -> (GraphQlEndpointUpdatePayload) GraphQlEndpointUpdateResponse.builder()
+                .map(e -> (GraphQlEndpointUpdateResponse) GraphQlEndpointUpdatePayload.builder()
                         .graphQlEndpoint(e)
                         .build())
                 .onErrorResume(BadSchemaException.class, ex -> error(GraphQlEndpointErrorBadSchema.builder()
@@ -63,7 +63,7 @@ public class UpdateGraphQlEndpointResolver {
                                 .build()));
     }
 
-    private static Mono<GraphQlEndpointUpdatePayload> error(final GraphQlEndpointUpdateError error) {
+    private static Mono<GraphQlEndpointUpdateResponse> error(final GraphQlEndpointUpdateError error) {
         return Mono.just(GraphQlEndpointUpdateErrors.builder().errors(List.of(error)).build());
     }
 

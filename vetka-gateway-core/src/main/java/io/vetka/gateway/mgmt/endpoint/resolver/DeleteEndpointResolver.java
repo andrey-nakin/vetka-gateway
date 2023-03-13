@@ -1,8 +1,8 @@
 package io.vetka.gateway.mgmt.endpoint.resolver;
 
 import io.vetka.gateway.mgmt.endpoint.model.EndpointDeletionErrors;
-import io.vetka.gateway.mgmt.endpoint.model.EndpointDeletionPayload;
 import io.vetka.gateway.mgmt.endpoint.model.EndpointDeletionResponse;
+import io.vetka.gateway.mgmt.endpoint.model.EndpointDeletionPayload;
 import io.vetka.gateway.mgmt.endpoint.model.EndpointErrorUnknownId;
 import io.vetka.gateway.persistence.exception.endpoint.EndpointNotFoundException;
 import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
@@ -25,12 +25,12 @@ public class DeleteEndpointResolver {
     private final GraphQlSchemaRegistryService graphQlSchemaRegistryService;
 
     @MutationMapping
-    public Mono<EndpointDeletionPayload> deleteEndpoint(@NonNull @Argument final String id) {
+    public Mono<EndpointDeletionResponse> deleteEndpoint(@NonNull @Argument final String id) {
         log.info("deleteEndpoint id={}", id);
 
         return graphQlEndpointService.delete(id)
                 .doOnSuccess(unused -> graphQlSchemaRegistryService.reloadSchemas())
-                .thenReturn((EndpointDeletionPayload) EndpointDeletionResponse.builder().id(id).build())
+                .thenReturn((EndpointDeletionResponse) EndpointDeletionPayload.builder().id(id).build())
                 .onErrorResume(EndpointNotFoundException.class, ex -> Mono.just(EndpointDeletionErrors.builder()
                         .errors(List.of(EndpointErrorUnknownId.builder()
                                 .message("There is no endpoint with the given ID")

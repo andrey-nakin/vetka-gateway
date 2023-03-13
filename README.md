@@ -37,7 +37,7 @@ mutation {
             readTimeout: 500
         }
     ) {
-        ...on GraphQlEndpointCreationResponse {
+        ...on GraphQlEndpointCreationPayload {
             graphQlEndpoint {
                 id
                 name
@@ -92,7 +92,7 @@ mutation {
             readTimeout: 300
         }
     ) {
-        ...on GraphQlEndpointCreationResponse {
+        ...on GraphQlEndpointUpdatePayload {
             graphQlEndpoint {
                 id
                 name
@@ -144,7 +144,7 @@ mutation {
     deleteEndpoint(
         id: "63eb7eea6cd73c172052175e"
     ) {
-        ...on EndpointDeletionResponse {
+        ...on EndpointDeletionPayload {
             id
         }
         ...on EndpointDeletionErrors {

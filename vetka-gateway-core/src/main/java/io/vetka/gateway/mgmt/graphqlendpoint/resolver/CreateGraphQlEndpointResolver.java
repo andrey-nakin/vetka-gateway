@@ -6,8 +6,8 @@ import io.vetka.gateway.mgmt.endpoint.model.EndpointErrorDuplicatingName;
 import io.vetka.gateway.mgmt.endpoint.model.EndpointErrorEmptyName;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationError;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationErrors;
-import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationPayload;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationResponse;
+import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationPayload;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointErrorBadSchema;
 import io.vetka.gateway.persistence.exception.endpoint.EndpointDuplicatingNameException;
 import io.vetka.gateway.mgmt.endpoint.exception.EndpointEmptyNameException;
@@ -35,12 +35,12 @@ public class CreateGraphQlEndpointResolver {
     private final GraphQLErrorMapper graphQLErrorMapper;
 
     @MutationMapping
-    public Mono<GraphQlEndpointCreationPayload> createGraphQlEndpoint(@NonNull DataFetchingEnvironment environment) {
+    public Mono<GraphQlEndpointCreationResponse> createGraphQlEndpoint(@NonNull DataFetchingEnvironment environment) {
         log.info("createGraphQlEndpoint");
 
         return validate(environment).flatMap(graphQlEndpointService::create)
                 .doOnSuccess(unused -> graphQlSchemaRegistryService.reloadSchemas())
-                .map(e -> (GraphQlEndpointCreationPayload) GraphQlEndpointCreationResponse.builder()
+                .map(e -> (GraphQlEndpointCreationResponse) GraphQlEndpointCreationPayload.builder()
                         .graphQlEndpoint(e)
                         .build())
                 .onErrorResume(BadSchemaException.class, ex -> error(GraphQlEndpointErrorBadSchema.builder()
@@ -57,7 +57,7 @@ public class CreateGraphQlEndpointResolver {
                                 .build()));
     }
 
-    private static Mono<GraphQlEndpointCreationPayload> error(final GraphQlEndpointCreationError error) {
+    private static Mono<GraphQlEndpointCreationResponse> error(final GraphQlEndpointCreationError error) {
         return Mono.just(GraphQlEndpointCreationErrors.builder().errors(List.of(error)).build());
     }
 
