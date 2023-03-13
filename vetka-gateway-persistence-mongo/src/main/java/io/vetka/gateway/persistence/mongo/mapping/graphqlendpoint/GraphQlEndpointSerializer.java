@@ -14,9 +14,11 @@ public abstract class GraphQlEndpointSerializer {
     public abstract GraphQlEndpoint toModel(GraphQlEndpointDocument src);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "version", ignore = true)
     public abstract GraphQlEndpointDocument toDocument(Map<String, Object> src);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "version", ignore = true)
     public abstract GraphQlEndpointDocument toDocument(@MappingTarget GraphQlEndpointDocument target,
             Map<String, Object> src);
 

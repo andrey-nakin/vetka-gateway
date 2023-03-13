@@ -1,6 +1,7 @@
 package io.vetka.gateway.persistence.mongo.service;
 
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
+import io.vetka.gateway.persistence.exception.endpoint.ConcurrentEndpointModificationException;
 import io.vetka.gateway.persistence.exception.endpoint.DuplicatingEndpointNameException;
 import io.vetka.gateway.persistence.exception.endpoint.EndpointNotFoundException;
 import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
@@ -67,11 +68,13 @@ public class MongoGraphQlEndpointService implements IGraphQlEndpointService {
     }
 
     private Mono<GraphQlEndpoint> update(@NonNull final GraphQlEndpointDocument doc) {
+        log.info("update doc={}", doc);
+
         return repository.save(doc).map(serializer::toModel).onErrorMap(ex -> {
             if (ex instanceof DuplicateKeyException) {
                 return new DuplicatingEndpointNameException(doc.getName());
             } else if (ex instanceof OptimisticLockingFailureException) {
-                return new EndpointNotFoundException(doc.getId());
+                return new ConcurrentEndpointModificationException(doc.getId());
             } else {
                 return ex;
             }

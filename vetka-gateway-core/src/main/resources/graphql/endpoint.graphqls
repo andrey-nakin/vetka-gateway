@@ -37,3 +37,8 @@ type EndpointErrorEmptyName implements IError {
   message: String!
   name: String!
 }
+
+type EndpointErrorConcurrentModification implements IError {
+  message: String!
+  id: ID
+}

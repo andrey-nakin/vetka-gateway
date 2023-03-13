@@ -2,6 +2,7 @@ package io.vetka.gateway.mgmt.graphqlendpoint.resolver;
 
 import graphql.schema.DataFetchingEnvironment;
 import io.vetka.gateway.mgmt.common.mapper.GraphQLErrorMapper;
+import io.vetka.gateway.mgmt.endpoint.model.EndpointErrorConcurrentModification;
 import io.vetka.gateway.mgmt.endpoint.model.EndpointErrorDuplicatingName;
 import io.vetka.gateway.mgmt.endpoint.model.EndpointErrorEmptyName;
 import io.vetka.gateway.mgmt.endpoint.model.EndpointErrorUnknownId;
@@ -10,6 +11,7 @@ import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateError;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateErrors;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdateResponse;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointUpdatePayload;
+import io.vetka.gateway.persistence.exception.endpoint.ConcurrentEndpointModificationException;
 import io.vetka.gateway.persistence.exception.endpoint.DuplicatingEndpointNameException;
 import io.vetka.gateway.mgmt.endpoint.exception.EndpointEmptyNameException;
 import io.vetka.gateway.persistence.exception.endpoint.EndpointNotFoundException;
@@ -60,6 +62,11 @@ public class UpdateGraphQlEndpointResolver {
                         EndpointErrorDuplicatingName.builder()
                                 .name(ex.getName())
                                 .message("There is already an endpoint with the given name")
+                                .build()))
+                .onErrorResume(ConcurrentEndpointModificationException.class, ex -> error(
+                        EndpointErrorConcurrentModification.builder()
+                                .id(ex.getId())
+                                .message("Endpoint is updated concurrently")
                                 .build()));
     }
 

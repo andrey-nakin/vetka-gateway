@@ -5,8 +5,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class DuplicatingEndpointNameException extends PersistenceException {
+public class ConcurrentEndpointModificationException extends PersistenceException {
 
     @Getter
-    private final String name;
+    private final String id;
 }
