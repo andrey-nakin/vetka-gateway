@@ -39,6 +39,8 @@ public class ObjectMapperConfiguration {
                 final var locations = tree.get("locations");
                 if (locations != null && locations.isArray()) {
                     builder.locations(Arrays.asList(p.getCodec().treeToValue(locations, SourceLocation[].class)));
+                } else {
+                    builder.locations(null);
                 }
 
                 final var extensions = tree.get("extensions");

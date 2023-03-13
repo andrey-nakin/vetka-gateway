@@ -56,6 +56,9 @@ class GraphQlErrorResponseTest extends WiremockTestBase {
                                             "sourceName": null
                                         }
                                     ]
+                                },
+                                {
+                                    "message": "Message 3"
                                 }
                             ]
                         }""")));
@@ -64,7 +67,7 @@ class GraphQlErrorResponseTest extends WiremockTestBase {
                 service.request(HttpTestUtils.nonEmptyHttpHeaders(), GraphQlSchemaTestUtils.simpleQuery(), info).join();
         assertNull(response.getData());
         assertNotNull(response.getErrors());
-        assertEquals(2, response.getErrors().size());
+        assertEquals(3, response.getErrors().size());
 
         {
             final var e = response.getErrors().get(0);
@@ -95,6 +98,13 @@ class GraphQlErrorResponseTest extends WiremockTestBase {
             assertEquals(6, e.getLocations().get(0).getColumn());
             assertNull(e.getLocations().get(0).getSourceName());
 
+            assertNull(e.getExtensions());
+        }
+
+        {
+            final var e = response.getErrors().get(2);
+            assertEquals("Message 3", e.getMessage());
+            assertNull(e.getLocations());
             assertNull(e.getExtensions());
         }
     }
