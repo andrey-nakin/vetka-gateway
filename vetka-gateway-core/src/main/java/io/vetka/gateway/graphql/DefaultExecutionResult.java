@@ -8,9 +8,11 @@ import static graphql.collect.ImmutableKit.map;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
 import lombok.Setter;
 
 @Setter
+@Builder
 public class DefaultExecutionResult implements ExecutionResult {
 
     private List<GraphQLError> errors;

@@ -7,9 +7,11 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import graphql.ExecutionResult;
 import graphql.GraphQLError;
 import graphql.GraphqlErrorBuilder;
 import graphql.language.SourceLocation;
+import io.vetka.gateway.graphql.DefaultExecutionResult;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
@@ -61,6 +63,30 @@ public class ObjectMapperConfiguration {
                 final var sourceName = tree.get("sourceName");
                 return new SourceLocation(line == null ? 0 : line.intValue(), column == null ? 0 : column.intValue(),
                         sourceName == null ? null : sourceName.textValue());
+            }
+        }).addDeserializer(ExecutionResult.class, new JsonDeserializer<>() {
+            @Override
+            @SuppressWarnings("unchecked")
+            public ExecutionResult deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                final var builder = DefaultExecutionResult.builder();
+                final JsonNode tree = p.getCodec().readTree(p);
+
+                final var data = tree.get("data");
+                if (data != null) {
+                    builder.data(p.getCodec().treeToValue(data, Object.class));
+                }
+
+                final var errors = tree.get("errors");
+                if (errors != null && errors.isArray()) {
+                    builder.errors(Arrays.asList(p.getCodec().treeToValue(errors, GraphQLError[].class)));
+                }
+
+                final var extensions = tree.get("extensions");
+                if (extensions != null && extensions.isObject()) {
+                    builder.extensions(p.getCodec().treeToValue(extensions, Map.class));
+                }
+
+                return builder.build();
             }
         });
 

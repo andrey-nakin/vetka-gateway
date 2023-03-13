@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import graphql.ExecutionResult;
 import io.vetka.gateway.endpoint.bo.WebGraphQlRequestWrapper;
-import io.vetka.gateway.graphql.DefaultExecutionResult;
 import io.vetka.gateway.objectmap.service.ObjectMapperHelper;
 import io.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import io.vetka.gateway.schema.service.GraphQlConstants;
@@ -132,7 +131,7 @@ public class HttpClientTransportService implements ITransportService {
             return objectMapperHelper.getObjectMapper()
                     .readValue(new BufferedReader(
                                     new InputStreamReader(httpResponse.body(), charsetFrom(httpResponse.headers()))),
-                            DefaultExecutionResult.class);
+                            ExecutionResult.class);
         } catch (JsonMappingException ex) {
             throw new GraphQlJsonMappingException(ex, graphQlEndpointInfo);
         } catch (JsonProcessingException ex) {
