@@ -12,7 +12,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 public abstract class TestBase {
 
     @Autowired
-    private IGraphQlEndpointService graphQlEndpointService;
+    protected IGraphQlEndpointService graphQlEndpointService;
 
     @MockBean
     private ITransportService transportService;
