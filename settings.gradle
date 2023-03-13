@@ -3,3 +3,5 @@ include 'vetka-gateway-core'
 include 'vetka-gateway-persistence-mongo'
 include 'vetka-gateway-transport-httpclient'
 include 'vetka-gateway-demo'
+include 'vetka-gateway-test-utils'
+

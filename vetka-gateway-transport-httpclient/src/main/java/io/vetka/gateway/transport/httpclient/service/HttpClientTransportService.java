@@ -28,7 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CompletableFuture;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -92,7 +92,7 @@ public class HttpClientTransportService implements ITransportService {
     }
 
     @Override
-    public CompletionStage<ExecutionResult> request(final HttpHeaders httpHeaders, final String query,
+    public CompletableFuture<ExecutionResult> request(final HttpHeaders httpHeaders, final String query,
             final GraphQlEndpointInfo graphQlEndpointInfo) {
 
         if (log.isDebugEnabled()) {

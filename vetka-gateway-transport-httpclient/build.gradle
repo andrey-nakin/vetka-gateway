@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     implementation project(':vetka-gateway-core')
+    implementation project(':vetka-gateway-test-utils')
 
     implementation 'org.springframework.boot:spring-boot-starter-graphql'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
@@ -15,8 +16,17 @@ dependencies {
 
     implementation 'org.apache.commons:commons-lang3:3.12.0'
 
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-stub-runner'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:2022.0.1"
+    }
 }
 
 bootJar {
@@ -25,4 +35,8 @@ bootJar {
 
 jar {
     enabled = true
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
 }
