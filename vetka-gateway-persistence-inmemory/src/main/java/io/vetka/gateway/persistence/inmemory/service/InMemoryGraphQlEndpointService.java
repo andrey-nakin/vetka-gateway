@@ -69,6 +69,10 @@ public class InMemoryGraphQlEndpointService implements IGraphQlEndpointService {
         return Mono.create(s -> {});
     }
 
+    public void clear() {
+        storage.clear();
+    }
+
     private boolean exists(final String id, final String name) {
         return storage.values()
                 .stream()

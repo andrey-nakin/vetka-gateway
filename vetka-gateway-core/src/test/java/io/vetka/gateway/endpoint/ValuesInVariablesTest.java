@@ -1,16 +1,10 @@
 package io.vetka.gateway.endpoint;
 
-import io.vetka.gateway.ApplicationTest;
-import io.vetka.gateway.transport.api.ITransportService;
+import io.vetka.gateway.TestBase;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
-@SpringBootTest(classes = {ApplicationTest.class})
-class ValuesInVariablesTest {
+class ValuesInVariablesTest extends TestBase {
 
-    @MockBean
-    private ITransportService transportService;
 
     @Test
     void basic() {
