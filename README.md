@@ -12,6 +12,7 @@ A simple Spring Boot-based GraphQL router.
 * `vetka-gateway-transport-httpclient` - implementation of the transport layer that uses Java `HttpClient`.
 * `vetka-gateway-demo` - application demonstrating the packaging of the Vetka Gateway libraries in a single executable
   application.
+* `vetka-gateway-test-utils` - internal usage classes.
 
 ## Usage
 
