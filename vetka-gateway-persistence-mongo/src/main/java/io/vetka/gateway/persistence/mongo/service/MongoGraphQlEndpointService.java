@@ -1,8 +1,8 @@
 package io.vetka.gateway.persistence.mongo.service;
 
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
-import io.vetka.gateway.persistence.api.exception.endpoint.EndpointDuplicatingNameException;
-import io.vetka.gateway.persistence.api.exception.endpoint.EndpointNotFoundException;
+import io.vetka.gateway.persistence.exception.endpoint.EndpointDuplicatingNameException;
+import io.vetka.gateway.persistence.exception.endpoint.EndpointNotFoundException;
 import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
 import io.vetka.gateway.persistence.mongo.document.graphqlendpoint.GraphQlEndpointDocument;
 import io.vetka.gateway.persistence.mongo.mapping.graphqlendpoint.GraphQlEndpointSerializer;

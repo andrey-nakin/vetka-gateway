@@ -1,4 +1,4 @@
-package io.vetka.gateway.persistence.api.exception.endpoint;
+package io.vetka.gateway.persistence.exception.endpoint;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

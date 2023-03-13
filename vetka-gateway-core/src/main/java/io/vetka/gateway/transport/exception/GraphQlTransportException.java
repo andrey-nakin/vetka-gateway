@@ -1,4 +1,4 @@
-package io.vetka.gateway.transport.api.exception;
+package io.vetka.gateway.transport.exception;
 
 public class GraphQlTransportException extends RuntimeException {
 

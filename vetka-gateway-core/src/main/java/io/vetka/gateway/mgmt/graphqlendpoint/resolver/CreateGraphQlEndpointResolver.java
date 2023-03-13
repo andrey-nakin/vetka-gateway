@@ -9,8 +9,8 @@ import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationErrors
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationPayload;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointCreationResponse;
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpointErrorBadSchema;
-import io.vetka.gateway.persistence.api.exception.endpoint.EndpointDuplicatingNameException;
-import io.vetka.gateway.persistence.api.exception.endpoint.EndpointEmptyNameException;
+import io.vetka.gateway.persistence.exception.endpoint.EndpointDuplicatingNameException;
+import io.vetka.gateway.mgmt.endpoint.exception.EndpointEmptyNameException;
 import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
 import io.vetka.gateway.schema.exception.BadSchemaException;
 import io.vetka.gateway.schema.service.GraphQlSchemaRegistryService;

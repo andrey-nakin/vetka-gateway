@@ -1,3 +1,3 @@
-package io.vetka.gateway.persistence.api.exception.endpoint;
+package io.vetka.gateway.mgmt.endpoint.exception;
 
 public class EndpointEmptyNameException extends RuntimeException {}

@@ -1,4 +1,4 @@
-package io.vetka.gateway.transport.api.exception;
+package io.vetka.gateway.transport.exception;
 
 import io.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 

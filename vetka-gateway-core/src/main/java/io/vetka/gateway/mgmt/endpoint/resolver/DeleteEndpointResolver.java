@@ -4,7 +4,7 @@ import io.vetka.gateway.mgmt.endpoint.model.EndpointDeletionErrors;
 import io.vetka.gateway.mgmt.endpoint.model.EndpointDeletionPayload;
 import io.vetka.gateway.mgmt.endpoint.model.EndpointDeletionResponse;
 import io.vetka.gateway.mgmt.endpoint.model.EndpointErrorUnknownId;
-import io.vetka.gateway.persistence.api.exception.endpoint.EndpointNotFoundException;
+import io.vetka.gateway.persistence.exception.endpoint.EndpointNotFoundException;
 import io.vetka.gateway.persistence.api.IGraphQlEndpointService;
 import io.vetka.gateway.schema.service.GraphQlSchemaRegistryService;
 import java.util.List;
