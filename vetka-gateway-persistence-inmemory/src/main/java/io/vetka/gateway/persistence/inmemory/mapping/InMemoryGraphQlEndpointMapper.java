@@ -2,6 +2,7 @@ package io.vetka.gateway.persistence.inmemory.mapping;
 
 import io.vetka.gateway.mgmt.graphqlendpoint.model.GraphQlEndpoint;
 import java.util.Map;
+import lombok.NonNull;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -10,7 +11,9 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public abstract class InMemoryGraphQlEndpointMapper {
 
-    public abstract GraphQlEndpoint toModel(GraphQlEndpoint src);
+    public GraphQlEndpoint toModel(@NonNull final GraphQlEndpoint src) {
+        return src.toBuilder().build();
+    }
 
     @Mapping(target = "id", ignore = true)
     public abstract GraphQlEndpoint.GraphQlEndpointBuilder toEntity(
