@@ -7,6 +7,7 @@ import io.vetka.gateway.schema.bo.GraphQlEndpointInfo;
 import io.vetka.gateway.test.GraphQlSchemaTestUtils;
 import java.util.UUID;
 import lombok.NonNull;
+import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,6 +25,11 @@ public abstract class WiremockTestBase {
 
     @MockBean
     protected IGraphQlEndpointService iGraphQlEndpointService;
+
+    @AfterEach
+    void after() {
+        wireMockServer.resetAll();
+    }
 
     protected String wiremockUrl(@NonNull final String query) {
         return "http://localhost:" + wireMockPort + query;
