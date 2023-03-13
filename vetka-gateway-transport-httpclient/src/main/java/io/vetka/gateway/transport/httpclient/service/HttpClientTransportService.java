@@ -104,14 +104,16 @@ public class HttpClientTransportService implements ITransportService {
                 .timeout(Duration.ofSeconds(validateReadTimeout(
                         ObjectUtils.defaultIfNull(graphQlEndpointInfo.getGraphQlEndpoint().getReadTimeout(),
                                 properties.getReadTimeout()))))
-                .POST(HttpRequest.BodyPublishers.ofString(query))
-                .headers(headers(httpHeaders))
-                .header("Accept", GraphQlConstants.MEDIA_TYPE.toString())
-                .header("Content-Type", GraphQlConstants.MEDIA_TYPE.toString())
-                .build();
+                .POST(HttpRequest.BodyPublishers.ofString(query));
+        final var headers = headers(httpHeaders);
+        if (headers.length > 0) {
+            request.headers(headers);
+        }
+        request.header("Accept", GraphQlConstants.MEDIA_TYPE.toString())
+                .header("Content-Type", GraphQlConstants.MEDIA_TYPE.toString());
 
         final var client = httpClient(graphQlEndpointInfo);
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
+        return client.sendAsync(request.build(), HttpResponse.BodyHandlers.ofInputStream())
                 .thenApply(httpResponse -> parseGraphQlResponse(httpResponse, graphQlEndpointInfo));
     }
 

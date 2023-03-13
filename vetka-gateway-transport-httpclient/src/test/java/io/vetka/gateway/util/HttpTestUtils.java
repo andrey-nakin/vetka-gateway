@@ -9,7 +9,7 @@ public class HttpTestUtils {
 
     public static HttpHeaders nonEmptyHttpHeaders() {
         final var map = new LinkedMultiValueMap<String, String>();
-        map.add("test", "test");
+        map.add("Test-Header", "Test-Value");
         return HttpHeaders.readOnlyHttpHeaders(map);
     }
 }
